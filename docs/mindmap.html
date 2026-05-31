@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSOT 全体マップ</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+    header {
+      padding: 10px 20px;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: 44px;
+    }
+    header h1 { font-size: 15px; font-weight: 600; }
+    header span { font-size: 11px; color: #8b949e; }
+    #mindmap-svg {
+      width: 100vw;
+      height: calc(100vh - 44px);
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🗺️ SSOT 全体マップ</h1>
+    <span>スクロール: ズーム ／ ドラッグ: 移動 ／ クリック: 展開/折りたたみ</span>
+  </header>
+  <svg id="mindmap-svg"></svg>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.17"></script>
+  <script>
+    const markdown = `
+# SSOT 全体マップ
+
+## ⚙️ Claude Code 設定・運用
+### 完了通知
+- Stop hook + Windowsトースト + ターミナルベル
+### セキュリティ
+- PreToolUseガード
+- コマンド安全チェック
+- シークレット管理
+### MCPツール
+- 6サーバーの使い分け基準
+### Claude Codeガイド
+- 完全ガイド12ファイル
+### ナレッジリント
+- 定期クロール・孤立検出
+- 自動リンク・可視化
+### glm-rate-proxy
+- ピーク時間帯ルーティング
+- エラー時自動フォールバック
+
+## 🚀 プロジェクト
+### NexusCore
+- LLMルーティング
+- エージェント設計
+- リファクタリング調査
+### atelier-kyo-manager
+- BUYMAスクレイパー
+- 価格調査・利益計算
+- リファクタリング
+### reserve-optimizer
+- LINE予約システム
+- CRM・i18n
+- Firestore移行
+### orchestrix
+- 改良点25件
+- セキュリティ強化
+### openclaw-stack
+- ガイドサイト・HTML変換
+### Zenn記事
+- 技術記事レビュー・Mermaid変換
+
+## 💼 キャリア戦略
+### 基本方針
+- 就職優先（GLM評価）
+- タイムライン1〜1.5年
+### 応募
+- 応募先3社・アプローチ方針
+### 面接対策
+- 50項目評価
+- 30秒/2分/5分ピッチ
+### ポートフォリオ
+- NexusCore・OpenClaw
+
+## 🛠️ 開発手法
+### 手法カタログ
+- TDD（Red-Green-Refactor）
+- BDD（Given-When-Then）
+- DDD（値オブジェクト・エンティティ）
+- 仕様駆動開発（OpenAPI/Zod）
+- クリーンアーキテクチャ
+### 設計原則
+- SOLID / DRY / KISS / YAGNI
+### CI/CD
+- GitHub Actions + Trunk-Based
+### 自律開発ループ
+- CronCreate + Issue自動実装
+- 自動リファクタリング
+
+## 📚 ガイドサイト
+### ssot-guide（独立リポジトリ）
+- SSOT知識管理ガイド
+### Claude Code系（12冊）
+- クイックスタート
+- LLM切り替え・SSH接続
+- Hooks設定・MCP設定
+- トラブルシューティング
+- コマンド＆スキル集
+### OpenClaw系（5冊）
+- 運用監視・再起動・復旧
+- AIニュースパイプライン
+
+## 🌐 インフラ・共通
+### ルール・運用
+- 共通ルール・記録手順
+- バックログ・チャーター
+### 知識ベース
+- リポジトリ索引（23個）
+- 用語集（80+用語）
+- ユーザープロファイル
+### LLMルーティング
+- 🟡 GLM-5.1（メイン）
+- 🟠 MiniMax（フォールバック）
+- 🔵 Sonnet（要許可）
+### 日次ログ
+- 10_DAILY/（日記ハブ）
+`;
+
+    window.addEventListener('load', async () => {
+      const { Transformer } = window.markmap;
+      const { Markmap, loadCSS, loadJS } = window.markmap;
+
+      const transformer = new Transformer();
+      const { root, features } = transformer.transform(markdown.trim());
+
+      const { styles, scripts } = transformer.getUsedAssets(features);
+      if (styles) loadCSS(styles);
+      if (scripts) await loadJS(scripts, { getMarkmap: () => window.markmap });
+
+      const svg = document.getElementById('mindmap-svg');
+      const mm = Markmap.create(svg, {
+        colorFreezeLevel: 2,
+        initialExpandLevel: 2,
+        maxWidth: 280,
+        duration: 400,
+      }, root);
+
+      // ウィンドウリサイズ時にフィット
+      window.addEventListener('resize', () => mm.fit());
+    });
+  </script>
+</body>
+</html>
