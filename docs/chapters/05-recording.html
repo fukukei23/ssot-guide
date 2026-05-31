@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>記録・ドキュメント — SSOT Guide</title>
+    <meta name="description" content="Claude Code CLI 記録・ドキュメントの解説 — AIコーディングアシスタント完全ガイド">
+    <meta property="og:title" content="記録・ドキュメント — SSOT Guide">
+    <meta property="og:description" content="Claude Code CLI 記録・ドキュメントの解説">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://fukukei23.github.io/ssot-guide/chapters/05-recording.html">
+    <meta property="og:image" content="https://fukukei23.github.io/ssot-guide/assets/ogp.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+    <header class="site-header">
+        <button class="menu-toggle" aria-label="メニュー" id="menuToggle">
+            <span></span><span></span><span></span>
+        </button>
+        <a href="../index.html" class="site-title">🏛️ SSOT Guide</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="テーマ切替">
+            <span class="icon-light">☀️</span>
+            <span class="icon-dark">🌙</span>
+        </button>
+    </header>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="../index.html">🏠 ホーム</a>
+        </div>
+        
+        <a href="00-overview.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🏛️</span>
+            概要
+        </a>
+        
+        <a href="01-structure.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">📁</span>
+            ディレクトリ設計
+        </a>
+        
+        <a href="02-llm-routing.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">⚡</span>
+            LLMルーティング
+        </a>
+        
+        <a href="03-claude-code.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🤖</span>
+            Claude Code統合
+        </a>
+        
+        <a href="04-autonomous.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🔄</span>
+            自律開発ループ
+        </a>
+        
+        <a href="05-recording.html"
+           class="sidebar-link active">
+            <span class="sidebar-icon">📝</span>
+            記録・ドキュメント
+        </a>
+        
+        <a href="06-methods.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🗂️</span>
+            開発手法カタログ
+        </a>
+        
+        <a href="07-career.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">💼</span>
+            キャリア戦略
+        </a>
+        
+        <a href="08-projects.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🚀</span>
+            プロジェクト紹介
+        </a>
+        
+    </nav>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <main class="content">
+        <div class="chapter-nav-top">
+            
+            <a href="04-autonomous.html" class="nav-prev">← 自律開発ループ</a>
+            
+            
+            <a href="06-methods.html" class="nav-next">開発手法カタログ →</a>
+            
+        </div>
+
+        <article class="chapter-body">
+            <h1>05 記録・ドキュメント — 決定ログ・日記・MOC</h1>
+<div class="callout callout-info"><p>「なぜそうしたか」を永続させるためのドキュメント設計</p></div>
+<hr />
+<h2>2層ドキュメント構造</h2>
+<pre><code>01_DECISIONS/&lt;project&gt;/   ← 技術的詳細（過去形）
+    「なぜそう決めたか」の変遷記録
+
+10_DAILY/YYYY-MM-DD.md   ← 日次サマリー（ハブ）
+    「今日何をしたか」のサマリー + 01_DECISIONSへのリンク
+</code></pre>
+<p><strong>重要な原則</strong>: 日記には詳細を書かない。詳細は <code>01_DECISIONS/</code> に書き、日記はリンクのみ。</p>
+<hr />
+<h2>決定ファイルの書き方</h2>
+<h3>テンプレート</h3>
+<pre><code class="language-markdown"># YYYY-MM-DD: &lt;タイトル&gt;
+
+## 決定事項
+[何を決めたか、一行で]
+
+## 背景
+[なぜこの問題に直面したか]
+
+## 選択した解決策
+[実際に選んだアプローチ]
+
+## 却下した代替案
+- **代替案A**: [内容] → 却下理由: [理由]
+- **代替案B**: [内容] → 却下理由: [理由]
+
+## 実装詳細
+[実際のコード・コマンド・設定値]
+
+## 未解決問題
+- [次のステップ or 判断待ちの事項]
+</code></pre>
+<h3>実例</h3>
+<pre><code class="language-markdown"># 2026-05-15: PostgreSQLからSQLiteへの移行
+
+## 決定事項
+開発環境のDBをPostgreSQLからSQLiteに変更する
+
+## 背景
+開発環境のセットアップが複雑でオンボーディングコストが高い。
+ローカル開発にPostgreSQLは過剰。
+
+## 選択した解決策
+- 開発: SQLite（ファイルDB）
+- 本番: PostgreSQL（変更なし）
+- ORM: SQLAlchemyで抽象化済みのため変更が最小
+
+## 却下した代替案
+- **Docker Composeで統一**: 設定複雑性は解消できるが重い → 却下
+- **SQLiteを本番でも使用**: スケーラビリティリスクあり → 却下
+
+## 実装詳細
+DATABASE_URL=sqlite:///./dev.db  # .env.development
+DATABASE_URL=postgresql://...    # .env.production
+
+## 未解決問題
+- ステージング環境のDB設定（次のスプリントで対応）
+</code></pre>
+<hr />
+<h2>日記フォーマット</h2>
+<pre><code class="language-markdown"># 2026-05-31
+
+## セッションログ (14:30)
+- PostgreSQL→SQLite移行スクリプトを実装
+- マイグレーションのバグ修正（NULL制約エラー）
+- 詳細: 01_DECISIONS/project-a/2026-05-31_db-migration.md
+- 未解決: ステージング環境での検証
+
+## セッションログ (20:00)
+- APIエンドポイントのテスト追加
+- 詳細: 01_DECISIONS/project-a/2026-05-31_api-tests.md
+
+---
+セッション終了: 21:30
+</code></pre>
+<hr />
+<h2>MOC（Map of Content）</h2>
+<h3>なぜMOCが必要か</h3>
+<p>vaultが大きくなると「あの情報どこにあったっけ？」が発生する。<br />
+MOCは全トピックへの<strong>索引</strong>で、これを読めばどこに何があるかがわかる。</p>
+<h3>MOCの構造</h3>
+<pre><code class="language-markdown"># 全体マップ（MOC）
+
+## Claude Code設定・運用
+
+| トピック | 場所 | 内容 |
+|---|---|---|
+| Hooks設定 | 00_SYSTEM/自動化.md | 4種のフック構成 |
+| セキュリティ | 00_SYSTEM/セキュリティ設定ハブ.md | コマンドガード |
+
+## プロジェクト別
+
+| プロジェクト | 場所 | 主な内容 |
+|---|---|---|
+| project-a | 01_DECISIONS/project-a/ | DB設計・API実装 |
+| project-b | 01_DECISIONS/project-b/ | フロントエンド |
+</code></pre>
+<h3>MOCの更新ルール</h3>
+<ul>
+<li><strong>新しいトピックを追加した時</strong>: 必ずMOCにリンクを追加</li>
+<li><strong>ファイルを移動した時</strong>: MOCのリンクを更新</li>
+<li><strong>セッション開始時</strong>: Claude CodeがMOCを自動読み込み</li>
+</ul>
+<hr />
+<h2>_INDEX.mdの活用</h2>
+<p>各プロジェクトフォルダに <code>_INDEX.md</code> を置く：</p>
+<pre><code class="language-markdown"># project-a — 決定ログ索引
+
+| ファイル | 内容 | いつ参照するか |
+|---|---|---|
+| 2026-05-15_db-migration.md | DB移行 | DB設定に迷った時 |
+| 2026-05-31_api-tests.md | API仕様 | テスト追加時 |
+</code></pre>
+<p><strong>自動生成スクリプト概念</strong>:</p>
+<pre><code class="language-bash"># generate-index.sh
+for file in *.md; do
+    [ &quot;$file&quot; = &quot;_INDEX.md&quot; ] &amp;&amp; continue
+    title=$(head -1 &quot;$file&quot; | sed 's/# //')
+    echo &quot;| $file | $title | 【要更新】 |&quot; &gt;&gt; _INDEX.md
+done
+</code></pre>
+<hr />
+<h2>ハンドオフドキュメント</h2>
+<p>セッション終了時に次のセッションへ引き継ぐメモ：</p>
+<pre><code class="language-markdown"># handoff.md
+
+## 直前のセッション（2026-05-31 21:30終了）
+- 実施: PostgreSQL→SQLite移行
+- コミット: feat: DB migration to SQLite
+- 未完: ステージング環境テスト
+
+## 次のセッションでやること
+1. ステージング環境でマイグレーション検証
+2. CIパイプラインの更新
+3. README.mdのDB設定手順を更新
+</code></pre>
+<hr />
+<h2>外部公開コンテンツ管理（20_PUBLISHING）</h2>
+<pre><code>20_PUBLISHING/
+├── _INDEX.md              ← 全記事の状態管理
+├── zenn/
+│   └── 2026-05-31_title.md
+└── note/
+    └── 2026-05-15_title.md
+</code></pre>
+<pre><code class="language-markdown"># _INDEX.md
+
+| タイトル | 媒体 | 状態 | URL |
+|---|---|---|---|
+| AI開発の知識管理 | Zenn | 公開済 | https://... |
+| LLMルーティング設計 | note | 下書き | - |
+</code></pre>
+
+        </article>
+
+        <nav class="chapter-nav-bottom">
+            
+            <a href="04-autonomous.html" class="nav-card prev">
+                <span class="nav-label">← 前の章</span>
+                <span class="nav-title">🔄 自律開発ループ</span>
+            </a>
+            
+            
+            <a href="06-methods.html" class="nav-card next">
+                <span class="nav-label">次の章 →</span>
+                <span class="nav-title">🗂️ 開発手法カタログ</span>
+            </a>
+            
+        </nav>
+    </main>
+
+    <script src="../assets/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default',
+            themeVariables: { fontSize: '14px' }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSOT 知識管理ガイド</title>
+    <meta name="description" content="AIと人間が協働するためのSSOT知識管理システムの設計・運用ガイド">
+    <meta property="og:title" content="SSOT 知識管理ガイド">
+    <meta property="og:description" content="AIと人間が協働するためのSSOT知識管理システムの設計・運用ガイド">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://fukukei23.github.io/ssot-guide/">
+    <meta property="og:image" content="https://fukukei23.github.io/ssot-guide/assets/ogp.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body class="index-page">
+    <header class="site-header">
+        <span class="site-title">🏛️ SSOT Guide</span>
+        <button class="theme-toggle" id="themeToggle" aria-label="テーマ切替">
+            <span class="icon-light">☀️</span>
+            <span class="icon-dark">🌙</span>
+        </button>
+    </header>
+
+    <main class="content">
+        <section class="hero">
+            <h1>SSOT 知識管理ガイド</h1>
+            <p>AIと人間が協働するための<br>Single Source of Truth 設計・運用ガイド</p>
+        </section>
+
+        <section class="chapter-grid">
+            
+            <a href="chapters/00-overview.html" class="chapter-card">
+                <div class="card-icon">🏛️</div>
+                <div class="card-number">第00章</div>
+                <h2 class="card-title">概要</h2>
+                <p class="card-desc">SSOTとは・設計の3原則・全体アーキテクチャ</p>
+            </a>
+            
+            <a href="chapters/01-structure.html" class="chapter-card">
+                <div class="card-icon">📁</div>
+                <div class="card-number">第01章</div>
+                <h2 class="card-title">ディレクトリ設計</h2>
+                <p class="card-desc">vault階層構造と責務分離・MOC・チャーター</p>
+            </a>
+            
+            <a href="chapters/02-llm-routing.html" class="chapter-card">
+                <div class="card-icon">⚡</div>
+                <div class="card-number">第02章</div>
+                <h2 class="card-title">LLMルーティング</h2>
+                <p class="card-desc">複数LLMの使い分け設計・ローカルプロキシパターン</p>
+            </a>
+            
+            <a href="chapters/03-claude-code.html" class="chapter-card">
+                <div class="card-icon">🤖</div>
+                <div class="card-number">第03章</div>
+                <h2 class="card-title">Claude Code統合</h2>
+                <p class="card-desc">CLAUDE.md・Hooks・Memoryシステム設計</p>
+            </a>
+            
+            <a href="chapters/04-autonomous.html" class="chapter-card">
+                <div class="card-icon">🔄</div>
+                <div class="card-number">第04章</div>
+                <h2 class="card-title">自律開発ループ</h2>
+                <p class="card-desc">Cron連動の自律実装・完了通知・安全ガード</p>
+            </a>
+            
+            <a href="chapters/05-recording.html" class="chapter-card">
+                <div class="card-icon">📝</div>
+                <div class="card-number">第05章</div>
+                <h2 class="card-title">記録・ドキュメント</h2>
+                <p class="card-desc">決定ログ・日記・MOC・ハンドオフ文書</p>
+            </a>
+            
+            <a href="chapters/06-methods.html" class="chapter-card">
+                <div class="card-icon">🗂️</div>
+                <div class="card-number">第06章</div>
+                <h2 class="card-title">開発手法カタログ</h2>
+                <p class="card-desc">TDD・BDD・DDD・仕様駆動・クリーンアーキテクチャ</p>
+            </a>
+            
+            <a href="chapters/07-career.html" class="chapter-card">
+                <div class="card-icon">💼</div>
+                <div class="card-number">第07章</div>
+                <h2 class="card-title">キャリア戦略</h2>
+                <p class="card-desc">AIネイティブ開発者としての戦略・ポートフォリオ設計</p>
+            </a>
+            
+            <a href="chapters/08-projects.html" class="chapter-card">
+                <div class="card-icon">🚀</div>
+                <div class="card-number">第08章</div>
+                <h2 class="card-title">プロジェクト紹介</h2>
+                <p class="card-desc">公開リポジトリ一覧・自律開発の実践</p>
+            </a>
+            
+        </section>
+
+        <section class="features">
+            <h2>📖 このガイドの特徴</h2>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <span class="feature-icon">🏛️</span>
+                    <h3>設計哲学から</h3>
+                    <p>なぜSSOTが必要かという哲学から始まる実践的ガイド</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🤖</span>
+                    <h3>AI協働特化</h3>
+                    <p>Claude Code等のAIエージェントとの長期協働を前提に設計</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">📱</span>
+                    <h3>モバイル対応</h3>
+                    <p>スマホからいつでも見返せるレスポンシブデザイン</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🌙</span>
+                    <h3>ダークモード</h3>
+                    <p>目に優しいテーマ切替対応</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>SSOT Guide — <a href="https://github.com/fukukei23/ssot-guide">GitHub</a></p>
+    </footer>
+
+    <script src="assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ディレクトリ設計 — SSOT Guide</title>
+    <meta name="description" content="Claude Code CLI ディレクトリ設計の解説 — AIコーディングアシスタント完全ガイド">
+    <meta property="og:title" content="ディレクトリ設計 — SSOT Guide">
+    <meta property="og:description" content="Claude Code CLI ディレクトリ設計の解説">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://fukukei23.github.io/ssot-guide/chapters/01-structure.html">
+    <meta property="og:image" content="https://fukukei23.github.io/ssot-guide/assets/ogp.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+    <header class="site-header">
+        <button class="menu-toggle" aria-label="メニュー" id="menuToggle">
+            <span></span><span></span><span></span>
+        </button>
+        <a href="../index.html" class="site-title">🏛️ SSOT Guide</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="テーマ切替">
+            <span class="icon-light">☀️</span>
+            <span class="icon-dark">🌙</span>
+        </button>
+    </header>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="../index.html">🏠 ホーム</a>
+        </div>
+        
+        <a href="00-overview.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🏛️</span>
+            概要
+        </a>
+        
+        <a href="01-structure.html"
+           class="sidebar-link active">
+            <span class="sidebar-icon">📁</span>
+            ディレクトリ設計
+        </a>
+        
+        <a href="02-llm-routing.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">⚡</span>
+            LLMルーティング
+        </a>
+        
+        <a href="03-claude-code.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🤖</span>
+            Claude Code統合
+        </a>
+        
+        <a href="04-autonomous.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🔄</span>
+            自律開発ループ
+        </a>
+        
+        <a href="05-recording.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">📝</span>
+            記録・ドキュメント
+        </a>
+        
+        <a href="06-methods.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🗂️</span>
+            開発手法カタログ
+        </a>
+        
+        <a href="07-career.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">💼</span>
+            キャリア戦略
+        </a>
+        
+        <a href="08-projects.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🚀</span>
+            プロジェクト紹介
+        </a>
+        
+    </nav>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <main class="content">
+        <div class="chapter-nav-top">
+            
+            <a href="00-overview.html" class="nav-prev">← 概要</a>
+            
+            
+            <a href="02-llm-routing.html" class="nav-next">LLMルーティング →</a>
+            
+        </div>
+
+        <article class="chapter-body">
+            <h1>01 ディレクトリ設計 — SSOT vaultの階層構造</h1>
+<div class="callout callout-info"><p>各ディレクトリに「役割」を持たせ、情報を迷わず格納できる構造を作る</p></div>
+<hr />
+<h2>ディレクトリ構造</h2>
+<pre><code>ssot-vault/
+├── 00_SYSTEM/           ← 🏛️ 憲法・自動化・設定
+│   ├── 共通ルール/       ← 全プロジェクト共通の開発ルール
+│   ├── 開発手法カタログ/ ← TDD・BDD・DDD等のレシピ
+│   ├── プロフィール/     ← AIへの自己紹介
+│   └── チャーター.md    ← vaultの憲法（変更不可）
+│
+├── 01_DECISIONS/        ← 📋 プロジェクト別決定ログ
+│   ├── project-a/
+│   │   ├── _INDEX.md    ← このプロジェクトの索引
+│   │   └── YYYY-MM-DD_&lt;内容&gt;.md
+│   └── project-b/
+│
+├── 10_DAILY/            ← 📅 日次セッション日記（ハブ）
+│   └── YYYY-MM-DD.md    ← サマリー + 01_DECISIONSへのリンク
+│
+├── 20_PUBLISHING/       ← 📤 外部公開コンテンツ
+│   └── _INDEX.md
+│
+├── 30_RESEARCH/         ← 🔬 外部調査結果
+│   └── llm-models/      ← LLMベンチマーク・料金
+│
+└── 40_CAREER/           ← 💼 キャリア戦略
+    └── 01_ドキュメント/
+</code></pre>
+<hr />
+<h2>各ディレクトリの責務</h2>
+<h3>00_SYSTEM — 憲法・設定・ルール</h3>
+<p><strong>役割</strong>: 「変わらない」または「ゆっくり変わる」ルールを格納</p>
+<ul>
+<li><code>チャーター.md</code>: vault全体の基本方針（ユーザーのみ変更可）</li>
+<li><code>共通ルール/ルール.md</code>: Tier 1キーワード・禁止操作・ログ形式</li>
+<li><code>MCPツール使い分けガイド.md</code>: どのMCPをいつ使うか</li>
+<li><code>自動化.md</code>: Hooks・Cronの一覧</li>
+</ul>
+<p><strong>ポイント</strong>: Claude Codeは <code>CLAUDE.md</code> から <code>00_SYSTEM/</code> へのリンクを通じてルールを読む</p>
+<h3>01_DECISIONS — 決定ログ</h3>
+<p><strong>役割</strong>: 「なぜそうしたか」の変遷を記録</p>
+<pre><code>01_DECISIONS/
+└── project-a/
+    ├── _INDEX.md                           ← 決定一覧（索引）
+    ├── 2026-01-15_データベース選定.md      ← 判断理由を記録
+    └── 2026-02-20_API設計変更.md           ← 変更の経緯
+</code></pre>
+<p><strong>ファイル名規則</strong>: <code>YYYY-MM-DD_&lt;内容&gt;.md</code></p>
+<p><strong>記載内容</strong>:</p>
+<ul>
+<li>何を決めたか（結論）</li>
+<li>なぜその選択をしたか（理由・トレードオフ）</li>
+<li>代替案と却下理由</li>
+<li>実際に実装したコード・コマンド</li>
+</ul>
+<h3>10_DAILY — セッション日記（ハブ）</h3>
+<p><strong>役割</strong>: 「今日何をしたか」のサマリーと01_DECISIONSへのリンク</p>
+<pre><code class="language-markdown">## セッションログ (14:30)
+- データベース移行スクリプトを実装
+- バグ修正: NULL制約エラー対応
+- 詳細: 01_DECISIONS/project-a/2026-05-31_db-migration.md
+- 未解決: ステージング環境での検証が必要
+</code></pre>
+<p><strong>重要</strong>: 日記には詳細を直書きしない。技術詳細は <code>01_DECISIONS/</code> に書き、日記はリンクのみ。</p>
+<h3>20_PUBLISHING — 外部公開コンテンツ</h3>
+<p><strong>役割</strong>: Zenn・note・Qiita等への投稿を一元管理</p>
+<ul>
+<li>下書き〜公開済みのステータス管理</li>
+<li><code>_INDEX.md</code> で全記事の状況を把握</li>
+</ul>
+<h3>30_RESEARCH — 外部調査結果</h3>
+<p><strong>役割</strong>: LLMの知識カットオフ後の情報を補完</p>
+<ul>
+<li>LLMモデルのベンチマーク・料金（週次更新）</li>
+<li>特定ライブラリのAPI変更情報</li>
+</ul>
+<hr />
+<h2>ファイル命名規則</h2>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>場所</th>
+<th>規則</th>
+<th>例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>01_DECISIONS/&lt;project&gt;/</code></td>
+<td><code>YYYY-MM-DD_&lt;内容&gt;.md</code></td>
+<td><code>2026-05-31_add-auth.md</code></td>
+</tr>
+<tr>
+<td><code>10_DAILY/</code></td>
+<td><code>YYYY-MM-DD.md</code></td>
+<td><code>2026-05-31.md</code></td>
+</tr>
+<tr>
+<td><code>30_RESEARCH/models/</code></td>
+<td><code>&lt;vendor-series&gt;.md</code></td>
+<td><code>anthropic-claude.md</code></td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2>MOC（Map of Content）</h2>
+<p>大きなvaultでは <strong>MOC</strong> を作ると迷わない。</p>
+<p><code>00_SYSTEM/全体マップ_MOC.md</code> は全トピックへの入口:</p>
+<ul>
+<li>テーブル形式でトピック → ファイルパスをリスト</li>
+<li>セッション開始時にClaude Codeが自動読み込み</li>
+<li>新しいトピックを追加したら必ずMOCにも追記</li>
+</ul>
+<hr />
+<h2>チャーター（憲法）</h2>
+<p><code>チャーター.md</code> はvaultの基本方針を記述した特別なファイル:</p>
+<ul>
+<li><strong>変更権限</strong>: ユーザーのみ（AIエージェントは変更不可）</li>
+<li><strong>内容</strong>: 何のためのvaultか、何を格納し何を格納しないか</li>
+<li><strong>参照タイミング</strong>: ポリシーが不明な時、自動で参照される</li>
+</ul>
+<pre><code class="language-markdown"># チャーター
+
+このvaultはAIエージェントと人間の協働を支援するSSOTです。
+
+## 基本方針
+- 全ての技術決定はここに記録される
+- 個人情報は格納しない
+- 公開/非公開の区別を明確にする
+</code></pre>
+
+        </article>
+
+        <nav class="chapter-nav-bottom">
+            
+            <a href="00-overview.html" class="nav-card prev">
+                <span class="nav-label">← 前の章</span>
+                <span class="nav-title">🏛️ 概要</span>
+            </a>
+            
+            
+            <a href="02-llm-routing.html" class="nav-card next">
+                <span class="nav-label">次の章 →</span>
+                <span class="nav-title">⚡ LLMルーティング</span>
+            </a>
+            
+        </nav>
+    </main>
+
+    <script src="../assets/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default',
+            themeVariables: { fontSize: '14px' }
+        });
+    </script>
+</body>
+</html>

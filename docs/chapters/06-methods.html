@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>開発手法カタログ — SSOT Guide</title>
+    <meta name="description" content="Claude Code CLI 開発手法カタログの解説 — AIコーディングアシスタント完全ガイド">
+    <meta property="og:title" content="開発手法カタログ — SSOT Guide">
+    <meta property="og:description" content="Claude Code CLI 開発手法カタログの解説">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://fukukei23.github.io/ssot-guide/chapters/06-methods.html">
+    <meta property="og:image" content="https://fukukei23.github.io/ssot-guide/assets/ogp.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+    <header class="site-header">
+        <button class="menu-toggle" aria-label="メニュー" id="menuToggle">
+            <span></span><span></span><span></span>
+        </button>
+        <a href="../index.html" class="site-title">🏛️ SSOT Guide</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="テーマ切替">
+            <span class="icon-light">☀️</span>
+            <span class="icon-dark">🌙</span>
+        </button>
+    </header>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="../index.html">🏠 ホーム</a>
+        </div>
+        
+        <a href="00-overview.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🏛️</span>
+            概要
+        </a>
+        
+        <a href="01-structure.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">📁</span>
+            ディレクトリ設計
+        </a>
+        
+        <a href="02-llm-routing.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">⚡</span>
+            LLMルーティング
+        </a>
+        
+        <a href="03-claude-code.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🤖</span>
+            Claude Code統合
+        </a>
+        
+        <a href="04-autonomous.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🔄</span>
+            自律開発ループ
+        </a>
+        
+        <a href="05-recording.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">📝</span>
+            記録・ドキュメント
+        </a>
+        
+        <a href="06-methods.html"
+           class="sidebar-link active">
+            <span class="sidebar-icon">🗂️</span>
+            開発手法カタログ
+        </a>
+        
+        <a href="07-career.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">💼</span>
+            キャリア戦略
+        </a>
+        
+        <a href="08-projects.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🚀</span>
+            プロジェクト紹介
+        </a>
+        
+    </nav>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <main class="content">
+        <div class="chapter-nav-top">
+            
+            <a href="05-recording.html" class="nav-prev">← 記録・ドキュメント</a>
+            
+            
+            <a href="07-career.html" class="nav-next">キャリア戦略 →</a>
+            
+        </div>
+
+        <article class="chapter-body">
+            <h1>06 開発手法カタログ — プロジェクトタイプ別レシピ</h1>
+<div class="callout callout-info"><p>どの開発手法をどのプロジェクトで使うかを整理する「手法セレクタ」</p></div>
+<hr />
+<h2>手法選択ガイド</h2>
+<pre><code>新しいプロジェクトが来た
+    ↓
+どんな性質のプロジェクト？
+    │
+    ├── ビジネスロジック重要・長期運用
+    │   └── → DDD + クリーンアーキテクチャ
+    │
+    ├── 外部APIやDBを触る機能
+    │   └── → TDD（テストファースト）
+    │
+    ├── 要件が曖昧・ステークホルダーとの合意が必要
+    │   └── → BDD（振舞駆動）
+    │
+    ├── APIを設計・公開する
+    │   └── → 仕様駆動開発（OpenAPI先行）
+    │
+    └── スクリプト・ワンショットツール
+        └── → シンプル実装（手法不要）
+</code></pre>
+<hr />
+<h2>TDD — テスト駆動開発</h2>
+<p><strong>いつ使う</strong>: 外部API・DB・副作用を伴う機能</p>
+<h3>Red-Green-Refactorサイクル</h3>
+<pre><code>1. Red:    失敗するテストを書く
+2. Green:  テストを通す最小実装をする
+3. Refactor: コードをきれいにする（テストはまだ通る）
+→ 繰り返す
+</code></pre>
+<h3>実例</h3>
+<pre><code class="language-python"># Step 1: Red（失敗するテスト）
+def test_validate_email():
+    assert validate_email(&quot;user@example.com&quot;) == True
+    assert validate_email(&quot;invalid&quot;) == False
+# → ImportError: cannot import name 'validate_email'
+
+# Step 2: Green（通す最小実装）
+def validate_email(email: str) -&gt; bool:
+    return &quot;@&quot; in email  # 最小実装
+
+# Step 3: Refactor（改善）
+import re
+def validate_email(email: str) -&gt; bool:
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email))
+</code></pre>
+<hr />
+<h2>BDD — 振舞駆動開発</h2>
+<p><strong>いつ使う</strong>: ステークホルダーとの要件合意・受け入れテスト</p>
+<h3>Given-When-Then形式</h3>
+<pre><code class="language-gherkin">Feature: ユーザーログイン
+
+  Scenario: 正常なログイン
+    Given ユーザー &quot;alice@example.com&quot; が登録済みである
+    When パスワード &quot;correct-password&quot; でログインする
+    Then ダッシュボードにリダイレクトされる
+
+  Scenario: 誤ったパスワード
+    Given ユーザー &quot;alice@example.com&quot; が登録済みである
+    When パスワード &quot;wrong-password&quot; でログインする
+    Then &quot;認証エラー&quot; のメッセージが表示される
+</code></pre>
+<h3>メリット</h3>
+<ul>
+<li>非エンジニアでも読める仕様書</li>
+<li>テストと仕様書が同一ドキュメント</li>
+<li>要件の抜け漏れを防げる</li>
+</ul>
+<hr />
+<h2>DDD — ドメイン駆動設計</h2>
+<p><strong>いつ使う</strong>: ビジネスロジックが複雑で長期運用するシステム</p>
+<h3>主要概念</h3>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>概念</th>
+<th>説明</th>
+<th>例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>エンティティ</td>
+<td>IDを持つオブジェクト</td>
+<td><code>User(id=123)</code></td>
+</tr>
+<tr>
+<td>値オブジェクト</td>
+<td>値が同じなら同一</td>
+<td><code>Email(&quot;a@b.com&quot;)</code></td>
+</tr>
+<tr>
+<td>集約</td>
+<td>整合性の境界</td>
+<td><code>Order + OrderItems</code></td>
+</tr>
+<tr>
+<td>リポジトリ</td>
+<td>永続化の抽象</td>
+<td><code>UserRepository</code></td>
+</tr>
+<tr>
+<td>ドメインサービス</td>
+<td>オブジェクトをまたがるロジック</td>
+<td><code>TransferService</code></td>
+</tr>
+</tbody>
+</table></div>
+<h3>レイヤー構造</h3>
+<pre><code>Presentation (API/UI)
+    ↓
+Application (ユースケース)
+    ↓
+Domain (ビジネスロジック) ← ここが核心
+    ↓
+Infrastructure (DB/外部API)
+</code></pre>
+<hr />
+<h2>仕様駆動開発 — OpenAPI先行設計</h2>
+<p><strong>いつ使う</strong>: APIを設計・公開するプロジェクト</p>
+<h3>手順</h3>
+<pre><code>1. OpenAPI仕様を書く（コードを書く前に）
+↓
+2. モックサーバーでフロントエンドが開発開始
+↓
+3. 仕様からサーバーコードを生成
+↓
+4. 仕様に合わせてテストを自動生成
+↓
+5. 仕様・テスト・実装が常に同期
+</code></pre>
+<pre><code class="language-yaml"># openapi.yaml（先に書く）
+paths:
+  /users/{id}:
+    get:
+      summary: ユーザー取得
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        &quot;200&quot;:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+</code></pre>
+<hr />
+<h2>クリーンアーキテクチャ</h2>
+<p><strong>いつ使う</strong>: 長期運用・チーム開発・依存関係を整理したい場合</p>
+<h3>依存の方向</h3>
+<pre><code>外側 → 内側に依存（内側は外側を知らない）
+
+Frameworks &amp; Drivers (最外層)
+    → Interface Adapters
+        → Use Cases
+            → Entities (最内層・純粋なビジネスロジック)
+</code></pre>
+<h3>実装例（Python）</h3>
+<pre><code class="language-python"># Domain Layer（外部依存ゼロ）
+class User:
+    def __init__(self, id: int, email: str):
+        self.id = id
+        self.email = email
+
+# Use Case Layer（Repositoryは抽象に依存）
+class GetUserUseCase:
+    def __init__(self, user_repo: UserRepository):
+        self._repo = user_repo
+
+    def execute(self, user_id: int) -&gt; User:
+        return self._repo.find_by_id(user_id)
+
+# Infrastructure Layer（DBの実装はここだけ）
+class PostgresUserRepository(UserRepository):
+    def find_by_id(self, user_id: int) -&gt; User:
+        # PostgreSQL固有のコード
+        ...
+</code></pre>
+<hr />
+<h2>SOLID原則</h2>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>原則</th>
+<th>意味</th>
+<th>実践</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S: 単一責任</td>
+<td>クラスは1つの責任を持つ</td>
+<td><code>UserValidator</code> と <code>UserSaver</code> を分ける</td>
+</tr>
+<tr>
+<td>O: 開放/閉鎖</td>
+<td>拡張に開いて修正に閉じる</td>
+<td>継承より合成を使う</td>
+</tr>
+<tr>
+<td>L: リスコフ置換</td>
+<td>サブクラスは基底クラスと置換可能</td>
+<td>インターフェースを守る</td>
+</tr>
+<tr>
+<td>I: インターフェース分離</td>
+<td>大きなIFより小さなIFを複数</td>
+<td>必要なメソッドだけ定義</td>
+</tr>
+<tr>
+<td>D: 依存逆転</td>
+<td>具体でなく抽象に依存する</td>
+<td>DIコンテナ・Repository pattern</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2>SSOTでの手法管理</h2>
+<p>各手法の詳細をSSOTに格納：</p>
+<pre><code>00_SYSTEM/開発手法カタログ/
+├── 00_セレクタ.md     ← このファイルが出発点
+├── 01_TDD.md
+├── 02_BDD.md
+├── 03_DDD.md
+├── 04_仕様駆動開発.md
+└── 05_クリーンアーキテクチャ.md
+</code></pre>
+<p>新しいプロジェクト開始時は <code>00_セレクタ.md</code> から始める。</p>
+
+        </article>
+
+        <nav class="chapter-nav-bottom">
+            
+            <a href="05-recording.html" class="nav-card prev">
+                <span class="nav-label">← 前の章</span>
+                <span class="nav-title">📝 記録・ドキュメント</span>
+            </a>
+            
+            
+            <a href="07-career.html" class="nav-card next">
+                <span class="nav-label">次の章 →</span>
+                <span class="nav-title">💼 キャリア戦略</span>
+            </a>
+            
+        </nav>
+    </main>
+
+    <script src="../assets/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default',
+            themeVariables: { fontSize: '14px' }
+        });
+    </script>
+</body>
+</html>

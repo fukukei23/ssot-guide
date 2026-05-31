@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>概要 — SSOT Guide</title>
+    <meta name="description" content="Claude Code CLI 概要の解説 — AIコーディングアシスタント完全ガイド">
+    <meta property="og:title" content="概要 — SSOT Guide">
+    <meta property="og:description" content="Claude Code CLI 概要の解説">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://fukukei23.github.io/ssot-guide/chapters/00-overview.html">
+    <meta property="og:image" content="https://fukukei23.github.io/ssot-guide/assets/ogp.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+    <header class="site-header">
+        <button class="menu-toggle" aria-label="メニュー" id="menuToggle">
+            <span></span><span></span><span></span>
+        </button>
+        <a href="../index.html" class="site-title">🏛️ SSOT Guide</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="テーマ切替">
+            <span class="icon-light">☀️</span>
+            <span class="icon-dark">🌙</span>
+        </button>
+    </header>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="../index.html">🏠 ホーム</a>
+        </div>
+        
+        <a href="00-overview.html"
+           class="sidebar-link active">
+            <span class="sidebar-icon">🏛️</span>
+            概要
+        </a>
+        
+        <a href="01-structure.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">📁</span>
+            ディレクトリ設計
+        </a>
+        
+        <a href="02-llm-routing.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">⚡</span>
+            LLMルーティング
+        </a>
+        
+        <a href="03-claude-code.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🤖</span>
+            Claude Code統合
+        </a>
+        
+        <a href="04-autonomous.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🔄</span>
+            自律開発ループ
+        </a>
+        
+        <a href="05-recording.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">📝</span>
+            記録・ドキュメント
+        </a>
+        
+        <a href="06-methods.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🗂️</span>
+            開発手法カタログ
+        </a>
+        
+        <a href="07-career.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">💼</span>
+            キャリア戦略
+        </a>
+        
+        <a href="08-projects.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🚀</span>
+            プロジェクト紹介
+        </a>
+        
+    </nav>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <main class="content">
+        <div class="chapter-nav-top">
+            
+            
+            <a href="01-structure.html" class="nav-next">ディレクトリ設計 →</a>
+            
+        </div>
+
+        <article class="chapter-body">
+            <h1>00 概要 — SSOT知識管理システムとは</h1>
+<div class="callout callout-info"><p>AIと人間が協働するための「唯一の真実の源泉」を構築・運用するノウハウ集</p></div>
+<hr />
+<h2>SSOTとは</h2>
+<p><strong>SSOT（Single Source of Truth）</strong> とは、ある情報について「ここを見れば必ず正しい最新情報がある」という単一の場所を設ける設計原則です。</p>
+<p>AIエージェント（Claude Code等）と人間が長期間協働するとき、情報が散在していると：</p>
+<ul>
+<li>AIが古い情報を参照して間違った判断をする</li>
+<li>同じ決定を何度も繰り返す（なぜそうしたか記憶が消える）</li>
+<li>プロジェクト間で矛盾した設定が生まれる</li>
+</ul>
+<p>SSOTはこれらの問題を防ぐための<strong>知識管理アーキテクチャ</strong>です。</p>
+<hr />
+<h2>このガイドで学べること</h2>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>章</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="01-structure.html">01 ディレクトリ設計</a></td>
+<td>SSOT vaultの階層構造と責務分離</td>
+</tr>
+<tr>
+<td><a href="02-llm-routing.html">02 LLMルーティング</a></td>
+<td>複数LLMの使い分け設計</td>
+</tr>
+<tr>
+<td><a href="03-claude-code.html">03 Claude Code統合</a></td>
+<td>Hooks・CLAUDE.md・settings.json</td>
+</tr>
+<tr>
+<td><a href="04-autonomous.html">04 自律開発ループ</a></td>
+<td>Cron連動の自律実装システム</td>
+</tr>
+<tr>
+<td><a href="05-recording.html">05 記録・ドキュメント</a></td>
+<td>決定ログ・日記・MOC</td>
+</tr>
+<tr>
+<td><a href="06-methods.html">06 開発手法カタログ</a></td>
+<td>TDD/BDD/DDD/クリーンアーキテクチャ</td>
+</tr>
+<tr>
+<td><a href="07-career.html">07 キャリア戦略</a></td>
+<td>AIネイティブ開発者としての戦略</td>
+</tr>
+<tr>
+<td><a href="08-projects.html">08 プロジェクト紹介</a></td>
+<td>公開リポジトリ一覧</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2>全体アーキテクチャ</h2>
+<pre><code>SSOT vault（Obsidian）
+├── 00_SYSTEM/     ← 憲法・ルール・設定
+├── 01_DECISIONS/  ← プロジェクト別決定ログ
+├── 10_DAILY/      ← 日次セッション日記（ハブ）
+├── 20_PUBLISHING/ ← 外部公開コンテンツ
+├── 30_RESEARCH/   ← LLM/技術調査
+└── 40_CAREER/     ← キャリア戦略
+</code></pre>
+<p>各ディレクトリは独立した「責務」を持ち、互いにMarkdownリンクで接続されています。</p>
+<hr />
+<h2>設計の3原則</h2>
+<h3>原則1: 情報は一箇所に書く</h3>
+<p>同じ情報を複数の場所に書いてはいけません。「参照する」ためにリンクを書きます。</p>
+<h3>原則2: 変更履歴を残す</h3>
+<p>「今の状態」だけでなく「なぜそうなったか」を記録します。<br />
+AIは文脈なしに過去の判断を理解できません。</p>
+<h3>原則3: AIが読みやすい構造にする</h3>
+<ul>
+<li>Markdown形式（LLMが最も得意なフォーマット）</li>
+<li>ファイル名にYYYY-MM-DDを含める（時系列が自明）</li>
+<li>見出し・テーブル・コードブロックを活用</li>
+</ul>
+<hr />
+<h2>このシステムが解決する問題</h2>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>問題</th>
+<th>SSOTによる解決</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AIが毎回同じ質問をする</td>
+<td>CLAUDE.mdに一度書けば永続</td>
+</tr>
+<tr>
+<td>「なぜそうしたか」を忘れる</td>
+<td><code>01_DECISIONS/</code>に決定ログ</td>
+</tr>
+<tr>
+<td>設定ファイルが散在する</td>
+<td><code>00_SYSTEM/設定ファイル/</code>に集約</td>
+</tr>
+<tr>
+<td>キャリアの整合性がとれない</td>
+<td><code>40_CAREER/</code>で一元管理</td>
+</tr>
+<tr>
+<td>LLMのコストが高い</td>
+<td>ルーティング設計で最適化</td>
+</tr>
+</tbody>
+</table></div>
+
+        </article>
+
+        <nav class="chapter-nav-bottom">
+            
+            
+            <a href="01-structure.html" class="nav-card next">
+                <span class="nav-label">次の章 →</span>
+                <span class="nav-title">📁 ディレクトリ設計</span>
+            </a>
+            
+        </nav>
+    </main>
+
+    <script src="../assets/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default',
+            themeVariables: { fontSize: '14px' }
+        });
+    </script>
+</body>
+</html>

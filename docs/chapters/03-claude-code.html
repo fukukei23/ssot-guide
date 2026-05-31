@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code統合 — SSOT Guide</title>
+    <meta name="description" content="Claude Code CLI Claude Code統合の解説 — AIコーディングアシスタント完全ガイド">
+    <meta property="og:title" content="Claude Code統合 — SSOT Guide">
+    <meta property="og:description" content="Claude Code CLI Claude Code統合の解説">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://fukukei23.github.io/ssot-guide/chapters/03-claude-code.html">
+    <meta property="og:image" content="https://fukukei23.github.io/ssot-guide/assets/ogp.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+    <header class="site-header">
+        <button class="menu-toggle" aria-label="メニュー" id="menuToggle">
+            <span></span><span></span><span></span>
+        </button>
+        <a href="../index.html" class="site-title">🏛️ SSOT Guide</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="テーマ切替">
+            <span class="icon-light">☀️</span>
+            <span class="icon-dark">🌙</span>
+        </button>
+    </header>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="../index.html">🏠 ホーム</a>
+        </div>
+        
+        <a href="00-overview.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🏛️</span>
+            概要
+        </a>
+        
+        <a href="01-structure.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">📁</span>
+            ディレクトリ設計
+        </a>
+        
+        <a href="02-llm-routing.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">⚡</span>
+            LLMルーティング
+        </a>
+        
+        <a href="03-claude-code.html"
+           class="sidebar-link active">
+            <span class="sidebar-icon">🤖</span>
+            Claude Code統合
+        </a>
+        
+        <a href="04-autonomous.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🔄</span>
+            自律開発ループ
+        </a>
+        
+        <a href="05-recording.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">📝</span>
+            記録・ドキュメント
+        </a>
+        
+        <a href="06-methods.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🗂️</span>
+            開発手法カタログ
+        </a>
+        
+        <a href="07-career.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">💼</span>
+            キャリア戦略
+        </a>
+        
+        <a href="08-projects.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🚀</span>
+            プロジェクト紹介
+        </a>
+        
+    </nav>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <main class="content">
+        <div class="chapter-nav-top">
+            
+            <a href="02-llm-routing.html" class="nav-prev">← LLMルーティング</a>
+            
+            
+            <a href="04-autonomous.html" class="nav-next">自律開発ループ →</a>
+            
+        </div>
+
+        <article class="chapter-body">
+            <h1>03 Claude Code統合 — SSOTをClaude Codeと接続する</h1>
+<div class="callout callout-info"><p>CLAUDE.md・settings.json・Hooksを使ってSSOTをAIの「長期記憶」にする</p></div>
+<hr />
+<h2>3層設定アーキテクチャ</h2>
+<pre><code>Layer 1: グローバル設定
+~/.claude/CLAUDE.md          ← 全プロジェクト共通のルール
+~/.claude/settings.json      ← Hooks・権限・環境変数
+
+Layer 2: プロジェクト設定
+&lt;repo&gt;/CLAUDE.md             ← このプロジェクト固有のルール
+
+Layer 3: ディレクトリ設定
+&lt;repo&gt;/&lt;dir&gt;/CLAUDE.md       ← 特定ディレクトリのルール（必要時のみ）
+</code></pre>
+<p><strong>重要</strong>: 下位レイヤーが上位レイヤーを上書きする（Layer 3 &gt; Layer 2 &gt; Layer 1）</p>
+<hr />
+<h2>CLAUDE.mdの設計</h2>
+<h3>グローバルCLAUDE.mdに書くべきこと</h3>
+<pre><code class="language-markdown"># グローバル設定
+
+## 基本ルール
+- 日本語で回答する
+- コードは変更前に既存実装を理解してから変更する
+
+## LLM利用ポリシー
+- デフォルト: Sonnet（バランス型）
+- 大量処理: Haiku に自動委譲
+
+## セキュリティ
+- APIキー値を会話・ファイルに書き込まない
+- 詳細: ~/projects/ssot/security-policy.md
+
+## SSOT参照
+- 設計哲学: ~/projects/ssot/00_SYSTEM/チャーター.md
+- ルール: ~/projects/ssot/00_SYSTEM/共通ルール/ルール.md
+</code></pre>
+<h3>プロジェクトCLAUDE.mdに書くべきこと</h3>
+<pre><code class="language-markdown"># プロジェクトA固有設定
+
+## 技術スタック
+- Python 3.12 + FastAPI
+- PostgreSQL（Supabase）
+- テスト: pytest
+
+## ブランチ運用
+- main直接コミット
+- PRは外部公開機能のみ
+
+## 禁止事項
+- `rm -rf` 系コマンド
+- 本番DBへの直接接続
+</code></pre>
+<hr />
+<h2>Hooks設計</h2>
+<p>4種のHookでClaude Codeを自動化：</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>Hook</th>
+<th>タイミング</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PreToolUse</code></td>
+<td>ツール実行前</td>
+<td>危険コマンドのブロック</td>
+</tr>
+<tr>
+<td><code>PostToolUse</code></td>
+<td>ツール実行後</td>
+<td>ログ記録・通知</td>
+</tr>
+<tr>
+<td><code>SessionStart</code></td>
+<td>セッション開始時</td>
+<td>前回引継ぎ・バックログ表示</td>
+</tr>
+<tr>
+<td><code>Stop</code></td>
+<td>セッション終了時</td>
+<td>日記の自動更新</td>
+</tr>
+</tbody>
+</table></div>
+<h3>PreToolUseで危険コマンドをブロック</h3>
+<pre><code class="language-json">{
+  &quot;hooks&quot;: {
+    &quot;PreToolUse&quot;: [{
+      &quot;matcher&quot;: &quot;Bash&quot;,
+      &quot;hooks&quot;: [{
+        &quot;type&quot;: &quot;command&quot;,
+        &quot;command&quot;: &quot;python3 ~/.claude/scripts/check-command-safety.py&quot;
+      }]
+    }]
+  }
+}
+</code></pre>
+<pre><code class="language-python"># check-command-safety.py（概念）
+import json, sys
+
+BLOCKED = [&quot;rm -rf&quot;, &quot;DROP TABLE&quot;, &quot;git push --force&quot;, &quot;sudo&quot;]
+
+data = json.load(sys.stdin)
+cmd = data.get(&quot;tool_input&quot;, {}).get(&quot;command&quot;, &quot;&quot;)
+
+for pattern in BLOCKED:
+    if pattern in cmd:
+        print(json.dumps({&quot;decision&quot;: &quot;block&quot;, &quot;reason&quot;: f&quot;危険コマンド: {pattern}&quot;}))
+        sys.exit(0)
+
+print(json.dumps({&quot;decision&quot;: &quot;allow&quot;}))
+</code></pre>
+<h3>SessionStartで前回引継ぎを表示</h3>
+<pre><code class="language-bash">#!/bin/bash
+# session-start.sh
+
+# 最新の引継ぎファイルを表示
+HANDOFF=&quot;$HOME/.claude/state/handoff.md&quot;
+if [ -f &quot;$HANDOFF&quot; ]; then
+    echo &quot;=== 前回の引継ぎ ===&quot;
+    cat &quot;$HANDOFF&quot;
+    echo &quot;&quot;
+fi
+
+# 今日の日付と作業カウント
+echo &quot;📅 $(date +%Y-%m-%d) | セッション開始&quot;
+</code></pre>
+<h3>Stopでセッション終了を記録</h3>
+<pre><code class="language-bash">#!/bin/bash
+# session-stop.sh
+
+DAILY_DIR=&quot;$HOME/projects/ssot/10_DAILY&quot;
+TODAY=$(date +%Y-%m-%d)
+DAILY_FILE=&quot;$DAILY_DIR/$TODAY.md&quot;
+
+# 終了時刻を記録
+echo &quot;&quot; &gt;&gt; &quot;$DAILY_FILE&quot;
+echo &quot;---&quot; &gt;&gt; &quot;$DAILY_FILE&quot;
+echo &quot;セッション終了: $(date +%H:%M)&quot; &gt;&gt; &quot;$DAILY_FILE&quot;
+</code></pre>
+<hr />
+<h2>Memoryシステム</h2>
+<p>Claude Codeには4種のメモリタイプがある：</p>
+<pre><code>~/.claude/projects/&lt;project-hash&gt;/memory/
+├── user_role.md          ← ユーザーの役割・専門知識
+├── feedback_*.md         ← 過去の指摘・好みのパターン
+├── project_*.md          ← 現在進行中のタスク・決定
+└── MEMORY.md             ← メモリインデックス（自動ロード）
+</code></pre>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>タイプ</th>
+<th>内容</th>
+<th>更新タイミング</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>user</code></td>
+<td>役割・知識レベル・好み</td>
+<td>初回セッション時</td>
+</tr>
+<tr>
+<td><code>feedback</code></td>
+<td>指摘された問題・確認された方法</td>
+<td>修正指示があった時</td>
+</tr>
+<tr>
+<td><code>project</code></td>
+<td>現在の意思決定・背景</td>
+<td>プロジェクトの方針変更時</td>
+</tr>
+<tr>
+<td><code>reference</code></td>
+<td>外部システムの場所</td>
+<td>参照先が決まった時</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2>SSOT + Claude Code の統合フロー</h2>
+<pre><code>セッション開始
+    ↓
+SessionStart Hook
+    ├── 前回handoff.md を表示
+    ├── バックログを確認
+    └── INDEX drift警告を出力
+    ↓
+作業中
+    ├── CLAUDE.md のルールに従って実装
+    ├── 決定ファイルを 01_DECISIONS/ に作成
+    └── git commit時に自動でSSOT記録を要求
+    ↓
+セッション終了
+    ├── Stop Hook が日記に終了時刻を記録
+    └── handoff.md を更新（次のセッションへ）
+</code></pre>
+<hr />
+<h2>settings.jsonテンプレート</h2>
+<pre><code class="language-json">{
+  &quot;defaultMode&quot;: &quot;acceptEdits&quot;,
+  &quot;env&quot;: {
+    &quot;ANTHROPIC_BASE_URL&quot;: &quot;http://localhost:8787&quot;
+  },
+  &quot;permissions&quot;: {
+    &quot;allow&quot;: [
+      &quot;Bash(git *)&quot;,
+      &quot;Bash(python3 *)&quot;,
+      &quot;Bash(npm *)&quot;
+    ],
+    &quot;deny&quot;: [
+      &quot;Bash(rm -rf *)&quot;,
+      &quot;Bash(sudo *)&quot;
+    ]
+  },
+  &quot;hooks&quot;: {
+    &quot;PreToolUse&quot;: [{
+      &quot;matcher&quot;: &quot;Bash&quot;,
+      &quot;hooks&quot;: [{&quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;~/.claude/scripts/check-safety.sh&quot;}]
+    }],
+    &quot;SessionStart&quot;: [{&quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;~/.claude/scripts/session-start.sh&quot;}],
+    &quot;Stop&quot;: [{&quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;~/.claude/scripts/session-stop.sh&quot;}]
+  }
+}
+</code></pre>
+
+        </article>
+
+        <nav class="chapter-nav-bottom">
+            
+            <a href="02-llm-routing.html" class="nav-card prev">
+                <span class="nav-label">← 前の章</span>
+                <span class="nav-title">⚡ LLMルーティング</span>
+            </a>
+            
+            
+            <a href="04-autonomous.html" class="nav-card next">
+                <span class="nav-label">次の章 →</span>
+                <span class="nav-title">🔄 自律開発ループ</span>
+            </a>
+            
+        </nav>
+    </main>
+
+    <script src="../assets/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default',
+            themeVariables: { fontSize: '14px' }
+        });
+    </script>
+</body>
+</html>

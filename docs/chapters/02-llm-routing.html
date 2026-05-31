@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLMルーティング — SSOT Guide</title>
+    <meta name="description" content="Claude Code CLI LLMルーティングの解説 — AIコーディングアシスタント完全ガイド">
+    <meta property="og:title" content="LLMルーティング — SSOT Guide">
+    <meta property="og:description" content="Claude Code CLI LLMルーティングの解説">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://fukukei23.github.io/ssot-guide/chapters/02-llm-routing.html">
+    <meta property="og:image" content="https://fukukei23.github.io/ssot-guide/assets/ogp.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+    <header class="site-header">
+        <button class="menu-toggle" aria-label="メニュー" id="menuToggle">
+            <span></span><span></span><span></span>
+        </button>
+        <a href="../index.html" class="site-title">🏛️ SSOT Guide</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="テーマ切替">
+            <span class="icon-light">☀️</span>
+            <span class="icon-dark">🌙</span>
+        </button>
+    </header>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="../index.html">🏠 ホーム</a>
+        </div>
+        
+        <a href="00-overview.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🏛️</span>
+            概要
+        </a>
+        
+        <a href="01-structure.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">📁</span>
+            ディレクトリ設計
+        </a>
+        
+        <a href="02-llm-routing.html"
+           class="sidebar-link active">
+            <span class="sidebar-icon">⚡</span>
+            LLMルーティング
+        </a>
+        
+        <a href="03-claude-code.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🤖</span>
+            Claude Code統合
+        </a>
+        
+        <a href="04-autonomous.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🔄</span>
+            自律開発ループ
+        </a>
+        
+        <a href="05-recording.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">📝</span>
+            記録・ドキュメント
+        </a>
+        
+        <a href="06-methods.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🗂️</span>
+            開発手法カタログ
+        </a>
+        
+        <a href="07-career.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">💼</span>
+            キャリア戦略
+        </a>
+        
+        <a href="08-projects.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🚀</span>
+            プロジェクト紹介
+        </a>
+        
+    </nav>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <main class="content">
+        <div class="chapter-nav-top">
+            
+            <a href="01-structure.html" class="nav-prev">← ディレクトリ設計</a>
+            
+            
+            <a href="03-claude-code.html" class="nav-next">Claude Code統合 →</a>
+            
+        </div>
+
+        <article class="chapter-body">
+            <h1>02 LLMルーティング — 複数LLMの使い分け設計</h1>
+<div class="callout callout-info"><p>コストと品質を最適化するためのモデルルーティング設計パターン</p></div>
+<hr />
+<h2>なぜルーティングが必要か</h2>
+<p>最高品質のモデル（例: Claude Opus）をすべてのタスクに使うのは非効率です：</p>
+<ul>
+<li>コストが高い</li>
+<li>レート制限に達しやすい</li>
+<li>軽量タスクには過剰な能力</li>
+</ul>
+<p><strong>ルーティング設計</strong>で「タスクの重さに合ったモデル」を自動選択します。</p>
+<hr />
+<h2>3層ルーティング設計</h2>
+<pre><code>タスク受信
+    ↓
+┌──────────────────────────────┐
+│  Tier 1: 高品質モデル        │  複雑な設計・コードレビュー
+│  (例: Claude Opus)           │  長文の文脈理解が必要なタスク
+└──────────────┬───────────────┘
+               │ 失敗 or コスト節約したい
+               ↓
+┌──────────────────────────────┐
+│  Tier 2: バランス型モデル    │  通常の実装・質問応答
+│  (例: Claude Sonnet)         │  多くの日常タスク
+└──────────────┬───────────────┘
+               │ 高速・大量処理が必要
+               ↓
+┌──────────────────────────────┐
+│  Tier 3: 軽量モデル          │  要約・フォーマット変換
+│  (例: Claude Haiku)          │  テストデータ生成・単純作業
+└──────────────────────────────┘
+</code></pre>
+<hr />
+<h2>自動委譲パターン</h2>
+<p>大量処理タスクは軽量モデルに<strong>自動委譲</strong>することでコストを削減：</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>タスク種別</th>
+<th>推奨モデル</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>要約・抽出</td>
+<td>軽量</td>
+<td>精度より速度とコストを優先</td>
+</tr>
+<tr>
+<td>フォーマット変換</td>
+<td>軽量</td>
+<td>定型処理は高品質モデル不要</td>
+</tr>
+<tr>
+<td>テストデータ生成</td>
+<td>軽量</td>
+<td>パターン生成は軽量モデルで十分</td>
+</tr>
+<tr>
+<td>コードレビュー</td>
+<td>高品質</td>
+<td>見落としのない正確な判断が必要</td>
+</tr>
+<tr>
+<td>アーキテクチャ設計</td>
+<td>高品質</td>
+<td>複雑なトレードオフの評価が必要</td>
+</tr>
+<tr>
+<td>ドキュメント執筆</td>
+<td>バランス</td>
+<td>品質と効率のバランスが重要</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2>ローカルプロキシパターン</h2>
+<p>Claude Code から複数のAPIプロバイダーを透過的に切り替えるには：</p>
+<pre><code>Claude Code
+    ↓ HTTP
+localhost:8787 (ローカルプロキシ)
+    ↓
+    ├── 通常時 → APIプロバイダーA
+    ├── ピーク時 → APIプロバイダーB
+    └── エラー時 → フォールバック先
+</code></pre>
+<p><strong>実装例（概念）</strong>:</p>
+<pre><code class="language-python"># proxy.py
+import time
+from fastapi import FastAPI
+
+app = FastAPI()
+
+def get_provider():
+    hour = time.localtime().tm_hour
+    if 15 &lt;= hour &lt; 19:          # ピーク時間帯
+        return &quot;provider_b&quot;       # コスト削減プロバイダー
+    return &quot;provider_a&quot;           # 通常プロバイダー
+
+@app.post(&quot;/v1/messages&quot;)
+async def route_message(request):
+    provider = get_provider()
+    return await forward_to(provider, request)
+</code></pre>
+<p><strong>メリット</strong>:</p>
+<ul>
+<li>Claude Codeの設定を変えずにモデルを切り替えられる</li>
+<li>時間帯・エラー状況に応じた動的切替</li>
+<li>料金ピーク時のコスト自動最適化</li>
+</ul>
+<hr />
+<h2>CLAUDE.mdでのルーティング設定</h2>
+<pre><code class="language-markdown">## LLM利用ポリシー
+- デフォルト: Claude Sonnet（バランス型）
+- 複雑なタスク: ユーザー許可後にOpusを使用
+- 大量処理: Haiku等の軽量モデルに自動委譲
+- バッジ表示: レスポンス冒頭に使用モデルを明示
+</code></pre>
+<hr />
+<h2>レート制限への対処</h2>
+<pre><code class="language-markdown">## settings.jsonでの設定例
+{
+  &quot;env&quot;: {
+    &quot;ANTHROPIC_BASE_URL&quot;: &quot;http://localhost:8787&quot;
+  }
+}
+</code></pre>
+<ul>
+<li>プロキシ側でレート制限を検知してフォールバック</li>
+<li>429エラー → 自動リトライ（指数バックオフ）</li>
+<li>繰り返し失敗 → 別プロバイダーへ切替</li>
+</ul>
+<hr />
+<h2>モデル選択の判断フロー</h2>
+<pre><code>新しいタスクが来た
+    ↓
+複雑さを判定
+    ├── 高複雑度（設計・レビュー）→ 高品質モデル
+    ├── 中複雑度（通常実装）    → バランス型
+    └── 低複雑度（定型・大量）  → 軽量モデル
+    ↓
+コスト制約を確認
+    ├── 制約あり → 一段階下のモデルを検討
+    └── 制約なし → そのまま実行
+    ↓
+実行 → 結果を評価
+    └── 品質不足 → より高品質なモデルで再実行
+</code></pre>
+<hr />
+<h2>コスト最適化のポイント</h2>
+<ol>
+<li><strong>プロンプトキャッシュ活用</strong>: システムプロンプトをキャッシュ</li>
+<li><strong>バッチ処理</strong>: 複数リクエストをまとめて送信</li>
+<li><strong>モデル階層の明確化</strong>: タスク種別ごとに使用モデルをルール化</li>
+<li><strong>不要なコンテキストを削除</strong>: <code>/compact</code> で履歴を圧縮</li>
+</ol>
+
+        </article>
+
+        <nav class="chapter-nav-bottom">
+            
+            <a href="01-structure.html" class="nav-card prev">
+                <span class="nav-label">← 前の章</span>
+                <span class="nav-title">📁 ディレクトリ設計</span>
+            </a>
+            
+            
+            <a href="03-claude-code.html" class="nav-card next">
+                <span class="nav-label">次の章 →</span>
+                <span class="nav-title">🤖 Claude Code統合</span>
+            </a>
+            
+        </nav>
+    </main>
+
+    <script src="../assets/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default',
+            themeVariables: { fontSize: '14px' }
+        });
+    </script>
+</body>
+</html>
