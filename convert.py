@@ -319,10 +319,8 @@ def filter_sections(text: str) -> str:
 
     text = "\n".join(result)
 
-    # 個人識別子のサニタイズ
-    text = text.replace("yn4416", "<USER>")
-    text = text.replace("fukukei23", "<USERNAME>")
-    text = text.replace("fukukei", "<USERNAME>")
+    # 個人識別子のサニタイズ（ssot-guideはパブリック公開コンテンツのため不要）
+    pass
 
     # インライン個人情報のサニタイズ
     for pattern, replacement in INLINE_REPLACEMENTS:
