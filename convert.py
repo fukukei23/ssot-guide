@@ -3,6 +3,7 @@
 
 import re
 import unicodedata
+from datetime import date
 from pathlib import Path
 
 from jinja2 import Template
@@ -12,6 +13,33 @@ from markdown_it import MarkdownIt
 
 SOURCE_DIR = Path(__file__).parent / "source"
 OUTPUT_DIR = Path(__file__).parent / "docs"
+VERSION_FILE = Path(__file__).parent / "VERSION"
+
+
+# --- バージョン管理 ---
+
+def _read_version() -> str:
+    """VERSIONファイルを読み込む。なければ '1.0' を返す。"""
+    if VERSION_FILE.exists():
+        return VERSION_FILE.read_text(encoding="utf-8").strip()
+    return "1.0"
+
+
+def _bump_version(version: str) -> str:
+    """マイナーバージョンをインクリメント: '1.3' → '1.4'"""
+    parts = version.split(".")
+    major = parts[0]
+    minor = int(parts[1]) if len(parts) > 1 else 0
+    return f"{major}.{minor + 1}"
+
+
+def get_build_info() -> tuple[str, str]:
+    """(version_str, date_str) を返す。ビルドごとにマイナーをインクリメント。"""
+    current = _read_version()
+    new_version = _bump_version(current)
+    VERSION_FILE.write_text(new_version + "\n", encoding="utf-8")
+    today = date.today().strftime("%Y.%m.%d")
+    return new_version, today
 
 # 既存章の手動定義
 CHAPTER_MAP = {
@@ -197,6 +225,11 @@ CHAPTER_TEMPLATE = Template("""\
         </nav>
     </main>
 
+    <footer class="site-footer">
+        <p>SSOT Guide — <a href="https://github.com/fukukei23/ssot-guide">GitHub</a></p>
+        <p class="site-version">v{{ version }} · {{ build_date }}</p>
+    </footer>
+
     <script src="../assets/script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
     <script>
@@ -282,6 +315,7 @@ INDEX_TEMPLATE = Template("""\
 
     <footer class="site-footer">
         <p>SSOT Guide — <a href="https://github.com/fukukei23/ssot-guide">GitHub</a></p>
+        <p class="site-version">v{{ version }} · {{ build_date }}</p>
     </footer>
 
     <script src="assets/script.js"></script>
@@ -451,6 +485,10 @@ def main():
     chapters_dir.mkdir(parents=True, exist_ok=True)
     assets_dir.mkdir(parents=True, exist_ok=True)
 
+    # バージョン・日付を取得（ビルドごとにインクリメント）
+    version, build_date = get_build_info()
+    print(f"Build: v{version} · {build_date}")
+
     # 章リストを構築（自動スキャン込み）
     effective_map = build_chapter_map()
     chapters = []
@@ -489,6 +527,8 @@ def main():
             chapters=chapters,
             prev_ch=prev_ch,
             next_ch=next_ch,
+            version=version,
+            build_date=build_date,
         )
 
         out = chapters_dir / f"{ch['slug']}.html"
@@ -496,7 +536,7 @@ def main():
         print(f"OK: {ch['slug']}.html")
 
     # index.html 生成
-    index_html = INDEX_TEMPLATE.render(chapters=chapters)
+    index_html = INDEX_TEMPLATE.render(chapters=chapters, version=version, build_date=build_date)
     (OUTPUT_DIR / "index.html").write_text(index_html, encoding="utf-8")
     print("OK: index.html")
 

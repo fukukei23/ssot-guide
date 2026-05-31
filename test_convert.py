@@ -1,6 +1,7 @@
 """convert.py のテスト — リンク書き換え・HTML生成・章スキャン."""
 
 import re
+from unittest.mock import patch
 
 import pytest
 
@@ -254,8 +255,10 @@ class TestBuildIntegrity:
 
     @pytest.fixture(autouse=True)
     def _build(self):
-        from convert import main
-        main()
+        """バージョンをバンプせずにビルドを実行。"""
+        import convert
+        with patch.object(convert, "get_build_info", return_value=("TEST", "2026.01.01")):
+            convert.main()
 
     def test_all_chapters_generated(self):
         for info in CHAPTER_MAP.values():
