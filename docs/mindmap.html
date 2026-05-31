@@ -1,25 +1,88 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SSOT 全体マップ</title>
   <style>
+    :root[data-theme="dark"] {
+      --bg: #0d1117;
+      --header-bg: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-sub: #adbac7;
+      --text-muted: #768390;
+      --panel-bg: #161b22;
+      --panel-title: #79c0ff;
+      --tag-bg: #21262d;
+      --tag-border: #444c56;
+      --path-bg: #0d1117;
+      --path-color: #56d364;
+      --node-text: #e6edf3;
+      --btn-bg: #21262d;
+      --btn-hover: #30363d;
+      --hint: #444c56;
+    }
+    :root[data-theme="light"] {
+      --bg: #ffffff;
+      --header-bg: #f6f8fa;
+      --border: #d0d7de;
+      --text: #1f2328;
+      --text-sub: #24292f;
+      --text-muted: #57606a;
+      --panel-bg: #f6f8fa;
+      --panel-title: #0969da;
+      --tag-bg: #eaeef2;
+      --tag-border: #d0d7de;
+      --path-bg: #ffffff;
+      --path-color: #1a7f37;
+      --node-text: #1f2328;
+      --btn-bg: #eaeef2;
+      --btn-hover: #d0d7de;
+      --hint: #adb5bd;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', 'Hiragino Sans', sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      transition: background 0.2s, color 0.2s;
+    }
 
     header {
-      padding: 10px 20px;
-      background: #161b22;
-      border-bottom: 1px solid #30363d;
+      padding: 0 16px;
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      gap: 12px;
-      height: 44px;
+      gap: 10px;
+      height: 48px;
       flex-shrink: 0;
     }
-    header h1 { font-size: 15px; font-weight: 600; }
-    header span { font-size: 11px; color: #8b949e; }
+    header h1 { font-size: 15px; font-weight: 700; flex-shrink: 0; }
+    header .hint-text { font-size: 11px; color: var(--text-muted); flex: 1; }
+
+    .theme-btn {
+      flex-shrink: 0;
+      background: var(--btn-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .theme-btn:hover { background: var(--btn-hover); }
 
     .main {
       display: flex;
@@ -33,395 +96,221 @@
       min-width: 0;
     }
 
+    /* markmapのノードテキスト色を上書き */
+    #mindmap-svg text,
+    #mindmap-svg .markmap-foreign div {
+      color: var(--node-text) !important;
+      fill: var(--node-text) !important;
+    }
+
     /* 右サイドパネル */
     #side-panel {
       width: 0;
       overflow: hidden;
-      background: #161b22;
-      border-left: 1px solid #30363d;
-      transition: width 0.25s ease;
+      background: var(--panel-bg);
+      border-left: 1px solid var(--border);
+      transition: width 0.25s ease, background 0.2s;
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
     }
-    #side-panel.open {
-      width: 280px;
-    }
+    #side-panel.open { width: 300px; }
+
     #side-panel-inner {
-      width: 280px;
-      padding: 16px;
+      width: 300px;
+      padding: 20px;
       overflow-y: auto;
       flex: 1;
     }
-    #side-panel .panel-title {
-      font-size: 13px;
+
+    .panel-title {
+      font-size: 16px;
       font-weight: 700;
-      color: #79c0ff;
-      margin-bottom: 10px;
+      color: var(--panel-title);
+      margin-bottom: 12px;
       line-height: 1.4;
-      border-bottom: 1px solid #30363d;
-      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
     }
-    #side-panel .panel-desc {
-      font-size: 12px;
-      color: #c9d1d9;
-      line-height: 1.7;
-      margin-bottom: 10px;
+    .panel-desc {
+      font-size: 14px;
+      color: var(--text-sub);
+      line-height: 1.8;
+      margin-bottom: 14px;
     }
-    #side-panel .panel-tags {
-      margin-bottom: 8px;
-    }
-    #side-panel .tag {
+    .panel-tags { margin-bottom: 12px; }
+    .tag {
       display: inline-block;
-      font-size: 10px;
-      background: #21262d;
-      border: 1px solid #30363d;
-      border-radius: 4px;
-      padding: 1px 7px;
-      margin: 2px 2px 0 0;
-      color: #8b949e;
+      font-size: 11px;
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+      border-radius: 20px;
+      padding: 2px 9px;
+      margin: 3px 3px 0 0;
+      color: var(--text-muted);
     }
-    #side-panel .panel-path {
-      font-size: 10px;
-      color: #3fb950;
-      font-family: monospace;
+    .panel-path {
+      font-size: 11px;
+      color: var(--path-color);
+      font-family: 'Consolas', monospace;
       word-break: break-all;
-      background: #0d1117;
-      padding: 6px 8px;
-      border-radius: 5px;
-      border: 1px solid #21262d;
+      background: var(--path-bg);
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      line-height: 1.5;
     }
-    #side-close {
-      position: absolute;
-      top: 50px;
-      right: 0;
-      width: 20px;
-      height: 40px;
-      background: #21262d;
-      border: 1px solid #30363d;
-      border-right: none;
-      border-radius: 4px 0 0 4px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #8b949e;
-      font-size: 12px;
-      transition: color 0.2s;
-      z-index: 10;
-    }
-    #side-close:hover { color: #e6edf3; }
 
     #hint {
-      position: absolute;
-      bottom: 16px;
+      position: fixed;
+      bottom: 14px;
       left: 50%;
       transform: translateX(-50%);
       font-size: 11px;
-      color: #484f58;
+      color: var(--hint);
       pointer-events: none;
       transition: opacity 0.5s;
+      white-space: nowrap;
     }
     #hint.hidden { opacity: 0; }
+
+    /* ── スマホ対応 ── */
+    @media (max-width: 640px) {
+      header h1 { font-size: 13px; }
+      .hint-text { display: none; }
+
+      /* パネルは下から出るシート */
+      .main { flex-direction: column; }
+      #side-panel {
+        width: 100% !important;
+        height: 0;
+        border-left: none;
+        border-top: 1px solid var(--border);
+        transition: height 0.25s ease, background 0.2s;
+      }
+      #side-panel.open { width: 100% !important; height: 45vh; }
+      #side-panel-inner { width: 100%; padding: 14px 16px; }
+      #mindmap-svg { width: 100%; height: auto; flex: 1; }
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>🗺️ SSOT 全体マップ</h1>
-    <span>スクロール: ズーム ／ ドラッグ: 移動 ／ ノードクリック: 詳細表示</span>
+    <span class="hint-text">スクロール: ズーム ／ ドラッグ: 移動 ／ ノードタップ: 詳細</span>
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">
+      <span id="theme-icon">☀️</span>
+      <span id="theme-label">ライトモード</span>
+    </button>
   </header>
   <div class="main">
     <svg id="mindmap-svg"></svg>
     <div id="side-panel">
       <div id="side-panel-inner">
         <div class="panel-title" id="panel-title"></div>
-        <div class="panel-desc" id="panel-desc"></div>
-        <div class="panel-tags" id="panel-tags"></div>
-        <div class="panel-path" id="panel-path" style="display:none"></div>
+        <div class="panel-desc"  id="panel-desc"></div>
+        <div class="panel-tags"  id="panel-tags"></div>
+        <div class="panel-path"  id="panel-path" style="display:none"></div>
       </div>
     </div>
   </div>
-  <div id="hint">ノードをクリックすると説明が表示されます</div>
+  <div id="hint">ノードをタップすると右に説明が表示されます</div>
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.17"></script>
   <script>
+    // ─── テーマ切替 ───
+    function toggleTheme() {
+      const html  = document.documentElement;
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      document.getElementById('theme-icon').textContent  = isDark ? '🌙' : '☀️';
+      document.getElementById('theme-label').textContent = isDark ? 'ダークモード' : 'ライトモード';
+      // markmapのSVGテキスト色を再適用
+      applyNodeTextColor();
+    }
+
+    function applyNodeTextColor() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const color  = isDark ? '#e6edf3' : '#1f2328';
+      document.querySelectorAll('#mindmap-svg text').forEach(el => {
+        el.style.fill = color;
+      });
+      document.querySelectorAll('#mindmap-svg .markmap-foreign div').forEach(el => {
+        el.style.color = color;
+      });
+    }
+
+    // ─── ノード説明データ ───
     const descriptions = {
-      // ルート
-      'SSOT 全体マップ': {
-        desc: 'obsidian-ssotリポジトリ全体のナレッジベース。全トピックへの入口で、LLM・人間どちらもここから目的の情報に到達できる。',
-        path: 'obsidian-ssot/', tags: ['SSOT', 'ナレッジベース', 'MOC']
-      },
-      // Claude Code設定・運用
-      '⚙️ Claude Code 設定・運用': {
-        desc: 'Claude Codeの設定・Hook・MCP・セキュリティなど運用全般のハブ。',
-        path: '00_SYSTEM/ + 01_DECISIONS/claude-code/', tags: ['Claude Code', '設定']
-      },
-      '完了通知': {
-        desc: 'Stopフック経由でWindowsトースト通知とターミナルベルを鳴らす仕組み。長時間タスクの終了を自動検知してお知らせ。',
-        path: '00_SYSTEM/完了通知設定ハブ.md', tags: ['Hook', 'Stop', '通知']
-      },
-      'Stop hook + Windowsトースト + ターミナルベル': {
-        desc: 'Claude Codeが停止した瞬間にWindowsのトースト通知（右下ポップアップ）とターミナルのベル音が鳴る。タスク完了を見逃さない。',
-        path: '~/.claude/scripts/notify/notify-done.sh', tags: ['Hook', '通知', 'Windows']
-      },
-      'セキュリティ': {
-        desc: 'PreToolUseフックで19種の破壊的コマンドをブロック。APIキーの露出防止ポリシーも含む。',
-        path: '00_SYSTEM/セキュリティ設定ハブ.md', tags: ['セキュリティ', 'Hook']
-      },
-      'PreToolUseガード': {
-        desc: '`rm -rf *`、`git push --force`、DROP/DELETE等の危険操作を実行前に自動ブロックするスクリプト。Claude Codeがツールを使う前に必ず通過する関門。',
-        path: '~/.claude/scripts/security/guard-destructive-commands.sh', tags: ['PreToolUse', 'セキュリティ', 'Hook']
-      },
-      'コマンド安全チェック': {
-        desc: 'bash -x / cat -A / grep（マスクなし）などシークレット（APIキー等）が漏洩しやすいコマンドを事前検査・ブロックする。',
-        path: '~/.claude/scripts/security/check-command-safety.py', tags: ['セキュリティ', 'シークレット']
-      },
-      'シークレット管理': {
-        desc: 'APIキーの値を会話・ファイルに書かない。~/.secrets.envに一元化し、SessionStart hookで環境変数として注入する方式。',
-        path: '01_DECISIONS/claude-code/参考資料/シークレット管理ポリシー.md', tags: ['APIキー', 'セキュリティ', '.env']
-      },
-      'MCPツール': {
-        desc: 'MCP（Model Context Protocol）は外部ツールをClaude Codeに接続する仕組み。GLM/MiniMax/computer-use/Chrome/Preview等6サーバーの使い分け基準を定義。',
-        path: '00_SYSTEM/MCPツール使い分けガイド.md', tags: ['MCP', 'ツール連携']
-      },
-      '6サーバーの使い分け基準': {
-        desc: 'タスク種別に応じてGLM（汎用LLM）・MiniMax（大量処理）・computer-use（デスクトップ操作）・Chrome（Web操作）・Preview（HTML確認）を使い分ける。',
-        path: '00_SYSTEM/MCPツール使い分けガイド.md', tags: ['MCP', 'ルーティング']
-      },
-      'Claude Codeガイド': {
-        desc: 'クイックスタートからHooks・MCP・トラブルシューティングまで全12冊のガイドサイト。GitHub Pagesで公開中。',
-        path: '00_SYSTEM/Claude-Codeガイド/', tags: ['ガイド', 'ドキュメント']
-      },
-      '完全ガイド12ファイル': {
-        desc: 'クイックスタート・LLM切り替え・SSH接続・Hooks・MCP・武器庫・トラブルシューティング・コマンド集・MCPカタログ・CLAUDE.md書き方・運用ノウハウ等12冊。',
-        path: 'https://fukukei23.github.io/guides/', tags: ['ガイド', 'GitHub Pages']
-      },
-      'ナレッジリント': {
-        desc: 'SSOTの孤立ファイル・リンク切れ・更新漏れを定期クロールで検出し、自動リンク修復・可視化を行うシステム。品質維持の自動化。',
-        path: '01_DECISIONS/claude-code/2026-05-26_ナレッジリント自動化システム.md', tags: ['自動化', 'Cron', '品質管理']
-      },
-      '定期クロール・孤立検出': {
-        desc: 'SSOTフォルダを定期スキャンしてどこからもリンクされていない孤立ファイルを検出する。知識の「迷子」を防ぐ。',
-        path: '01_DECISIONS/claude-code/2026-05-26_ナレッジリント自動化システム.md', tags: ['クロール', '孤立検出']
-      },
-      '自動リンク・可視化': {
-        desc: '検出した孤立ファイルを適切な場所に自動リンクし、全体の繋がりを可視化する。このマインドマップもその一形態。',
-        path: '01_DECISIONS/claude-code/2026-05-26_ナレッジリント自動化システム.md', tags: ['可視化', '自動化']
-      },
-      'glm-rate-proxy': {
-        desc: 'Claude Code → localhost:8787 → Z.AI/MiniMaxのローカルプロキシサーバー。ピーク時間帯(15-19時)のGLMトークン消費を防ぎ、エラー時に自動フォールバックする。',
-        path: '~/.claude/scripts/glm-rate-proxy/', tags: ['GLM', 'MiniMax', 'プロキシ']
-      },
-      'ピーク時間帯ルーティング': {
-        desc: 'JST 15:00-19:00はGLMを完全ブロックしMiniMaxのみ使用。この時間帯はGLMのトークン消費量が通常の3倍になるため。',
-        path: '~/.claude/scripts/glm-rate-proxy/proxy.js', tags: ['GLM', 'MiniMax', 'ルーティング']
-      },
-      'エラー時自動フォールバック': {
-        desc: '429(レート制限)/500/502/タイムアウト発生時にGLM→MiniMaxへ自動切り替え。ユーザーが気づかないうちに切り替わる。',
-        path: '~/.claude/scripts/glm-rate-proxy/', tags: ['フォールバック', 'エラーハンドリング']
-      },
-      // プロジェクト
-      '🚀 プロジェクト': {
-        desc: '全プロジェクトの技術決定記録。いつ・なぜそう決めたかの変遷を01_DECISIONSフォルダで追跡できる。',
-        path: '01_DECISIONS/', tags: ['プロジェクト', '決定記録']
-      },
-      'NexusCore': {
-        desc: '多段LLMルーティング・エージェント設計の研究プロジェクト。ConstitutionalCouncilAgent等の高度なエージェントを実装。GitHub公開済み。',
-        path: '01_DECISIONS/NexusCore/', tags: ['LLM', 'エージェント', 'Python']
-      },
-      'LLMルーティング': {
-        desc: '複数のLLM（GLM/MiniMax/Sonnet等）を目的・コスト・速度に応じて使い分ける仕組み。glm-rate-proxyで自動切替。',
-        path: '00_SYSTEM/共通ルール/LLMルーティング.md', tags: ['GLM', 'MiniMax', 'Sonnet']
-      },
-      'エージェント設計': {
-        desc: 'LLMが自律的にツールを使いながらタスクを達成するシステム設計。NexusCoreでは複数エージェントがパイプラインで連携する。',
-        path: '01_DECISIONS/NexusCore/', tags: ['エージェント', 'LLM', 'パイプライン']
-      },
-      'リファクタリング調査': {
-        desc: 'コードの動作を変えずに内部構造を整理・改善する作業。3LLMによるコードレビューでP0/P1課題を特定し順次対応。',
-        path: '40_CAREER/キャリア分析/02_コード品質/', tags: ['リファクタリング', 'コード品質']
-      },
-      'atelier-kyo-manager': {
-        desc: 'BUYMAでの転売管理システム。EU価格取得・関税計算・利益率計算・仕入れ管理を自動化。Celery+Redisの非同期基盤も計画中。',
-        path: '01_DECISIONS/atelier-kyo-manager/', tags: ['BUYMA', 'Python', 'スクレイパー']
-      },
-      'BUYMAスクレイパー': {
-        desc: 'BUYMAの販売価格をスクレイピングで取得し、ファジーマッチングで商品を紐付ける。ブラウザのStealth設定で検出回避。',
-        path: '01_DECISIONS/atelier-kyo-manager/', tags: ['スクレイパー', 'BUYMA', 'Selenium']
-      },
-      '価格調査・利益計算': {
-        desc: '仕入れ原価（EU価格+BY送料+関税）vs 販売価格の利益幅を自動計算。利益率降順ソート・色分け表示。',
-        path: '01_DECISIONS/atelier-kyo-manager/', tags: ['利益計算', '価格調査']
-      },
-      'リファクタリング': {
-        desc: '動作を変えずにコード構造を改善する作業。session_managerを4クラスに分割し、重複スクリプト12ファイルを削除する等を実施。',
-        path: '01_DECISIONS/atelier-kyo-manager/', tags: ['リファクタリング', 'コード品質']
-      },
-      'reserve-optimizer': {
-        desc: 'LINE連携の美容室予約最適化システム。予約管理・CRM・多言語対応・Firestore移行完了。970件のテスト全通過。',
-        path: '01_DECISIONS/reserve-optimizer/', tags: ['LINE', 'GAS', 'Firestore']
-      },
-      'LINE予約システム': {
-        desc: 'LINE Messaging API経由でお客様が予約・変更・キャンセルできる仕組み。GAS（Google Apps Script）でバックエンドを実装。',
-        path: '01_DECISIONS/reserve-optimizer/', tags: ['LINE', 'GAS', '予約']
-      },
-      'CRM・i18n': {
-        desc: 'CRM=顧客関係管理（Customer Relationship Management）。i18n=多言語化（internationalization）。顧客情報管理と日英対応を実装。',
-        path: '01_DECISIONS/reserve-optimizer/', tags: ['CRM', '多言語', 'i18n']
-      },
-      'Firestore移行': {
-        desc: 'スプレッドシートからFirestore（Googleのクラウドデータベース）への移行。FirestoreService+SheetService実装、283件テスト全通過。',
-        path: '01_DECISIONS/reserve-optimizer/2026-05-27_Phase4-3_FirestoreService実装と動作確認.md', tags: ['Firestore', 'DB移行', 'GCP']
-      },
-      'orchestrix': {
-        desc: 'オーケストレーション（複数サービスの指揮・調整）基盤。改良点25件・セキュリティ強化済み。テストカバレッジ81%。',
-        path: '01_DECISIONS/orchestrix/', tags: ['オーケストレーション', 'Python']
-      },
-      '改良点25件': {
-        desc: '3LLMによるコードレビューで発見された改善点。セキュリティ・パフォーマンス・コード品質のカテゴリで分類・優先順位付けして対応。',
-        path: '01_DECISIONS/orchestrix/', tags: ['コードレビュー', '改善']
-      },
-      'セキュリティ強化': {
-        desc: 'STRIDE分析（Spoofing/Tampering/Repudiation/Info disclosure/Denial/Elevation）で脅威を特定し、対策を実装。',
-        path: '01_DECISIONS/orchestrix/', tags: ['セキュリティ', 'STRIDE']
-      },
-      'openclaw-stack': {
-        desc: 'AIニュース自動収集→要約→X(Twitter)投稿パイプライン。Docker Composeで複数サービスを管理。ガイドサイト・HTML変換スクリプト含む。',
-        path: '01_DECISIONS/openclaw-stack/', tags: ['自動化', 'X/Twitter', 'Docker']
-      },
-      'ガイドサイト・HTML変換': {
-        desc: 'MarkdownソースをPythonスクリプト(convert.py)でHTML化し、GitHub Pagesで公開するパイプライン。このガイドもその仕組みで動いている。',
-        path: '01_DECISIONS/openclaw-stack/', tags: ['GitHub Pages', 'Markdown', 'HTML']
-      },
-      'Zenn記事': {
-        desc: '技術系ブログサービスZennへの記事投稿管理。公開優先度付きインデックスで20本以上のドラフトを管理中。',
-        path: '01_DECISIONS/zenn/', tags: ['Zenn', 'ブログ', '技術記事']
-      },
-      '技術記事レビュー・Mermaid変換': {
-        desc: 'GLM/MiniMaxで記事の品質レビューを実施。MermaidはテキストでUMLや図を書ける記法。ZennはMermaid対応のため図をコード変換。',
-        path: '01_DECISIONS/zenn/', tags: ['Zenn', 'Mermaid', 'レビュー']
-      },
-      // キャリア
-      '💼 キャリア戦略': {
-        desc: 'AI活用エンジニアへの転職戦略。GLM・MiniMax統合判断でフェーズ0追加、タイムライン1〜1.5年と設定。',
-        path: '40_CAREER/', tags: ['キャリア', '転職']
-      },
-      '基本方針': {
-        desc: 'フリーランスより就職を優先する方針。理由：安定収入・スキル向上・チーム経験。Phase 0としてポートフォリオ整備を先行。',
-        path: '01_DECISIONS/career/2026-05-26_GLM-MiniMax統合判断.md', tags: ['就職', 'キャリア戦略']
-      },
-      '就職優先（GLM評価）': {
-        desc: 'GLM-5.1が評価した結果、フリーランスより就職の方がリスク低・スキル向上・実績構築に有利と判断。MiniMaxも同意見。',
-        path: '01_DECISIONS/career/2026-05-26_GLM-MiniMax統合判断.md', tags: ['就職', 'GLM', '評価']
-      },
-      'タイムライン1〜1.5年': {
-        desc: 'Phase 0（ポートフォリオ整備・3ヶ月）→Phase 1（就活開始）→Phase 2（入社・スキル向上）の流れ。',
-        path: '01_DECISIONS/career/2026-05-26_GLM-MiniMax統合判断.md', tags: ['タイムライン', 'フェーズ']
-      },
-      '応募': {
-        desc: '応募先3社の選定とアプローチ方針。AIネイティブな開発経験をフレーミングして差別化。',
-        path: '40_CAREER/01_ドキュメント/応募戦略_v2.md', tags: ['応募', '就活']
-      },
-      '応募先3社・アプローチ方針': {
-        desc: 'SES型・受託系・自社サービス系を3社選定。Claude Code活用実績をポートフォリオとして提示するアプローチ。',
-        path: '40_CAREER/01_ドキュメント/応募戦略_v2.md', tags: ['応募', 'ポートフォリオ']
-      },
-      '面接対策': {
-        desc: '50項目の評価シートと30秒/2分/5分の3段階ピッチを準備。「AIネイティブ開発者」としてのフレーミング。',
-        path: '40_CAREER/01_ドキュメント/面接戦略.md', tags: ['面接', '対策']
-      },
-      '50項目評価': {
-        desc: '技術力・コミュニケーション・問題解決力等50項目で自己評価し、強み・弱みを明確化した面接準備シート。',
-        path: '40_CAREER/01_ドキュメント/面接戦略.md', tags: ['自己評価', '面接']
-      },
-      '30秒/2分/5分ピッチ': {
-        desc: '面接の文脈に応じて使い分けるエレベーターピッチ。30秒=一言自己紹介、2分=経歴+強み、5分=実績+ビジョン。',
-        path: '40_CAREER/01_ドキュメント/面接ピッチ_v2.md', tags: ['ピッチ', '自己PR']
-      },
-      'ポートフォリオ': {
-        desc: 'NexusCore（LLMエージェント）とOpenClaw（AI自動化）の2本柱。GitHub + ガイドサイト + デモ動画で訴求。',
-        path: '01_DECISIONS/career/2026-05-25_ポートフォリオ戦略とNexusCoreデモ準備.md', tags: ['ポートフォリオ', 'GitHub']
-      },
-      'NexusCore・OpenClaw': {
-        desc: 'NexusCore=多段LLMエージェント基盤。OpenClaw=AIニュース自動収集・投稿システム。どちらもGitHub公開・ガイドサイト付き。',
-        path: '01_DECISIONS/career/2026-05-25_ポートフォリオ戦略とNexusCoreデモ準備.md', tags: ['NexusCore', 'OpenClaw']
-      },
-      // 開発手法
-      '🛠️ 開発手法': {
-        desc: '新規プロジェクト立ち上げ時に使う手法セレクタ。プロジェクトの性質に応じてTDD/BDD/DDD等を選択する。',
-        path: '00_SYSTEM/開発手法カタログ/', tags: ['開発手法', '設計']
-      },
-      '手法カタログ': {
-        desc: 'プロジェクトタイプ別に最適な開発手法を選べるカタログ。5パターンのレシピから選ぶセレクタ方式。',
-        path: '00_SYSTEM/開発手法カタログ/00_セレクタ.md', tags: ['開発手法', 'カタログ']
-      },
-      'TDD（Red-Green-Refactor）': {
-        desc: 'テスト駆動開発（Test-Driven Development）。先にテストを書いて失敗(Red)→実装して通過(Green)→整理(Refactor)のサイクルで開発する手法。',
-        path: '00_SYSTEM/開発手法カタログ/01_TDD.md', tags: ['TDD', 'テスト', '開発手法']
-      },
-      'BDD（Given-When-Then）': {
-        desc: '振舞駆動開発（Behavior-Driven Development）。Given（前提）→When（操作）→Then（結果）の形式でテストを書く。ユーザー視点で仕様を記述できる。',
-        path: '00_SYSTEM/開発手法カタログ/02_BDD.md', tags: ['BDD', 'テスト', '仕様']
-      },
-      'DDD（値オブジェクト・エンティティ）': {
-        desc: 'ドメイン駆動設計（Domain-Driven Design）。ビジネスの概念をコードに直接反映する設計思想。値オブジェクト=不変の値、エンティティ=IDを持つオブジェクト。',
-        path: '00_SYSTEM/開発手法カタログ/03_DDD.md', tags: ['DDD', 'ドメイン', '設計']
-      },
-      '仕様駆動開発（OpenAPI/Zod）': {
-        desc: 'API仕様（OpenAPI）やスキーマ（Zod）を先に定義してから実装する手法。フロント・バックエンドの齟齬を防ぎ、型安全な開発ができる。',
-        path: '00_SYSTEM/開発手法カタログ/04_仕様駆動開発.md', tags: ['OpenAPI', 'Zod', '仕様駆動']
-      },
-      'クリーンアーキテクチャ': {
-        desc: 'Robert C. Martin提唱の設計思想。ビジネスロジックを外側（DB・UI・フレームワーク）から独立させ、依存関係を内側に向ける。テストしやすく変更に強い設計になる。',
-        path: '00_SYSTEM/開発手法カタログ/05_クリーンアーキテクチャ.md', tags: ['アーキテクチャ', '設計', 'レイヤー']
-      },
-      '設計原則': {
-        desc: '良いコードを書くための普遍的な原則集。',
-        path: '00_SYSTEM/開発手法カタログ/06_設計原則.md', tags: ['設計原則', 'SOLID']
-      },
-      'SOLID / DRY / KISS / YAGNI': {
-        desc: 'SOLID=5つのOOP設計原則。DRY=同じコードを繰り返さない。KISS=シンプルに保つ。YAGNI=今必要でないものは作らない。全て「変更しやすいコード」のための原則。',
-        path: '00_SYSTEM/開発手法カタログ/06_設計原則.md', tags: ['SOLID', 'DRY', 'KISS', 'YAGNI']
-      },
-      'CI/CD': {
-        desc: '継続的インテグレーション/継続的デリバリー。コードをpushするたびに自動でテスト・ビルド・デプロイを実行する仕組み。',
-        path: '00_SYSTEM/開発手法カタログ/07_CI-CD.md', tags: ['CI/CD', 'GitHub Actions']
-      },
-      'GitHub Actions + Trunk-Based': {
-        desc: 'GitHub Actionsでpush時に自動テスト実行。Trunk-Basedはmainブランチに直接コミットする開発スタイル（長期ブランチを作らない）。',
-        path: '00_SYSTEM/開発手法カタログ/07_CI-CD.md', tags: ['GitHub Actions', 'Trunk-Based']
-      },
-      '自律開発ループ': {
-        desc: 'CronCreateでスケジュール実行し、GitHubのIssueを自動で実装するループ。毎時7分(atelier-kyo)・毎時23分(NexusCore)で動く。',
-        path: '00_SYSTEM/共通ルール/自律開発ループ.md', tags: ['Cron', '自動化', 'Issue']
-      },
-      'CronCreate + Issue自動実装': {
-        desc: 'Claude CodeのCronCreate機能でスケジュール設定→指定時刻にGitHub Issueを読んで自動実装→コミット・プッシュまで人間不在で完結。',
-        path: '00_SYSTEM/共通ルール/自律開発ループ.md', tags: ['CronCreate', 'GitHub', '自動実装']
-      },
-      '自動リファクタリング': {
-        desc: 'Plan（方針策定）→Tracker（進捗管理）→CronCreate（自動実行）の3層でリファクタリングを自律的に進める手法。',
-        path: '00_SYSTEM/共通ルール/自動リファクタリング実行手法.md', tags: ['リファクタリング', '自動化']
-      },
-      // ガイドサイト
-      '📚 ガイドサイト': {
-        desc: '公開中のガイドサイト群。ssot-guide（独立リポジトリ）+ guides（37冊）。GitHub Pagesで無料公開。',
-        path: 'https://fukukei23.github.io/guides/', tags: ['GitHub Pages', 'ガイド']
-      },
-      'ssot-guide（独立リポジトリ）': {
-        desc: 'SSOTシステム設計・LLMルーティング・自律開発ループを解説するガイドサイト。guides本体とは独立したリポジトリ。',
-        path: 'https://fukukei23.github.io/ssot-guide/', tags: ['ssot-guide', 'SSOT']
-      },
-      'SSOT知識管理ガイド': {
-        desc: 'このSSOTシステム（obsidian-ssot）の使い方・設計思想・LLMルーティングをわかりやすく解説した公開ガイド。',
-        path: 'https://fukukei23.github.io/ssot-guide/', tags: ['SSOT', 'ガイド', '公開']
-      },
-      'Claude Code系（12冊）': {
-        desc: 'Claude Codeの使い方を体系的に解説した12冊のシリーズ。初心者向けクイックスタートから上級者向け自動化まで網羅。',
-        path: 'https://fukukei23.github.io/guides/', tags: ['Claude Code', 'ガイドシリーズ']
-      },
+      'SSOT 全体マップ': { desc: 'obsidian-ssotリポジトリ全体のナレッジベース。全トピックへの入口で、LLM・人間どちらもここから目的の情報に到達できる。', path: 'obsidian-ssot/', tags: ['SSOT', 'ナレッジベース', 'MOC'] },
+      '⚙️ Claude Code 設定・運用': { desc: 'Claude Codeの設定・Hook・MCP・セキュリティなど運用全般のハブ。', path: '00_SYSTEM/ + 01_DECISIONS/claude-code/', tags: ['Claude Code', '設定'] },
+      '完了通知': { desc: 'Stopフック経由でWindowsトースト通知とターミナルベルを鳴らす仕組み。長時間タスクの終了を自動検知してお知らせ。', path: '00_SYSTEM/完了通知設定ハブ.md', tags: ['Hook', 'Stop', '通知'] },
+      'Stop hook + Windowsトースト + ターミナルベル': { desc: 'Claude Codeが停止した瞬間にWindowsの右下ポップアップ通知とターミナルのベル音が鳴る。タスク完了を見逃さない仕組み。', path: '~/.claude/scripts/notify/notify-done.sh', tags: ['Hook', '通知', 'Windows'] },
+      'セキュリティ': { desc: 'PreToolUseフックで19種の破壊的コマンドをブロック。APIキーの露出防止ポリシーも含む。', path: '00_SYSTEM/セキュリティ設定ハブ.md', tags: ['セキュリティ', 'Hook'] },
+      'PreToolUseガード': { desc: '`rm -rf *`、`git push --force`、DROP/DELETE等の危険操作を実行前に自動ブロックするスクリプト。Claude Codeがツールを使う前に必ず通過する関門。', path: '~/.claude/scripts/security/guard-destructive-commands.sh', tags: ['PreToolUse', 'セキュリティ', 'Hook'] },
+      'コマンド安全チェック': { desc: 'bash -x / cat -A / grep（マスクなし）などAPIキーが漏洩しやすいコマンドを事前に検査・ブロックする。', path: '~/.claude/scripts/security/check-command-safety.py', tags: ['セキュリティ', 'シークレット'] },
+      'シークレット管理': { desc: 'APIキーの値を会話・ファイルに書かない。~/.secrets.envに一元化し、SessionStart hookで環境変数として注入する方式。', path: '01_DECISIONS/claude-code/参考資料/シークレット管理ポリシー.md', tags: ['APIキー', 'セキュリティ', '.env'] },
+      'MCPツール': { desc: 'MCP（Model Context Protocol）は外部ツールをClaude Codeに接続する仕組み。GLM/MiniMax/computer-use/Chrome/Preview等6サーバーの使い分け基準を定義。', path: '00_SYSTEM/MCPツール使い分けガイド.md', tags: ['MCP', 'ツール連携'] },
+      '6サーバーの使い分け基準': { desc: 'タスク種別に応じてGLM（汎用LLM）・MiniMax（大量処理）・computer-use（デスクトップ操作）・Chrome（Web操作）・Preview（HTML確認）を使い分ける。', path: '00_SYSTEM/MCPツール使い分けガイド.md', tags: ['MCP', 'ルーティング'] },
+      'Claude Codeガイド': { desc: 'クイックスタートからHooks・MCP・トラブルシューティングまで全12冊のガイドサイト。GitHub Pagesで公開中。', path: '00_SYSTEM/Claude-Codeガイド/', tags: ['ガイド', 'ドキュメント'] },
+      '完全ガイド12ファイル': { desc: 'クイックスタート・LLM切り替え・SSH接続・Hooks・MCP・武器庫・トラブルシューティング・コマンド集・MCPカタログ・CLAUDE.md書き方・運用ノウハウ等12冊。', path: 'https://fukukei23.github.io/guides/', tags: ['ガイド', 'GitHub Pages'] },
+      'ナレッジリント': { desc: 'SSOTの孤立ファイル・リンク切れ・更新漏れを定期クロールで検出し、自動リンク修復・可視化を行うシステム。', path: '01_DECISIONS/claude-code/2026-05-26_ナレッジリント自動化システム.md', tags: ['自動化', 'Cron', '品質管理'] },
+      '定期クロール・孤立検出': { desc: 'SSOTフォルダを定期スキャンしてどこからもリンクされていない孤立ファイルを検出する。知識の「迷子」を防ぐ。', path: '01_DECISIONS/claude-code/2026-05-26_ナレッジリント自動化システム.md', tags: ['クロール', '孤立検出'] },
+      '自動リンク・可視化': { desc: '検出した孤立ファイルを適切な場所に自動リンクし、全体の繋がりを可視化する。このマインドマップもその一形態。', path: '01_DECISIONS/claude-code/2026-05-26_ナレッジリント自動化システム.md', tags: ['可視化', '自動化'] },
+      'glm-rate-proxy': { desc: 'Claude Code → localhost:8787 → Z.AI/MiniMaxのローカルプロキシサーバー。ピーク時間帯のGLMトークン消費を防ぎ、エラー時に自動フォールバックする。', path: '~/.claude/scripts/glm-rate-proxy/', tags: ['GLM', 'MiniMax', 'プロキシ'] },
+      'ピーク時間帯ルーティング': { desc: 'JST 15:00-19:00はGLMを完全ブロックしMiniMaxのみ使用。この時間帯はGLMのトークン消費量が通常の3倍になるため。', path: '~/.claude/scripts/glm-rate-proxy/proxy.js', tags: ['GLM', 'MiniMax', 'ルーティング'] },
+      'エラー時自動フォールバック': { desc: '429(レート制限)/500/502/タイムアウト発生時にGLM→MiniMaxへ自動切り替え。ユーザーが気づかないうちに切り替わる。', path: '~/.claude/scripts/glm-rate-proxy/', tags: ['フォールバック', 'エラーハンドリング'] },
+      '🚀 プロジェクト': { desc: '全プロジェクトの技術決定記録。いつ・なぜそう決めたかの変遷を01_DECISIONSフォルダで追跡できる。', path: '01_DECISIONS/', tags: ['プロジェクト', '決定記録'] },
+      'NexusCore': { desc: '多段LLMルーティング・エージェント設計の研究プロジェクト。ConstitutionalCouncilAgent等の高度なエージェントを実装。GitHub公開済み。', path: '01_DECISIONS/NexusCore/', tags: ['LLM', 'エージェント', 'Python'] },
+      'LLMルーティング': { desc: '複数のLLM（GLM/MiniMax/Sonnet等）を目的・コスト・速度に応じて使い分ける仕組み。glm-rate-proxyで自動切替。', path: '00_SYSTEM/共通ルール/LLMルーティング.md', tags: ['GLM', 'MiniMax', 'Sonnet'] },
+      'エージェント設計': { desc: 'LLMが自律的にツールを使いながらタスクを達成するシステム設計。NexusCoreでは複数エージェントがパイプラインで連携する。', path: '01_DECISIONS/NexusCore/', tags: ['エージェント', 'LLM', 'パイプライン'] },
+      'リファクタリング調査': { desc: 'コードの動作を変えずに内部構造を整理・改善する作業。3LLMによるコードレビューでP0/P1課題を特定し順次対応。', path: '40_CAREER/キャリア分析/02_コード品質/', tags: ['リファクタリング', 'コード品質'] },
+      'atelier-kyo-manager': { desc: 'BUYMAでの転売管理システム。EU価格取得・関税計算・利益率計算・仕入れ管理を自動化。Celery+Redisの非同期基盤も計画中。', path: '01_DECISIONS/atelier-kyo-manager/', tags: ['BUYMA', 'Python', 'スクレイパー'] },
+      'BUYMAスクレイパー': { desc: 'BUYMAの販売価格をスクレイピングで取得し、ファジーマッチングで商品を紐付ける。ブラウザのStealth設定で検出回避。', path: '01_DECISIONS/atelier-kyo-manager/', tags: ['スクレイパー', 'BUYMA', 'Selenium'] },
+      '価格調査・利益計算': { desc: '仕入れ原価（EU価格+BY送料+関税）vs 販売価格の利益幅を自動計算。利益率降順ソート・色分け表示。', path: '01_DECISIONS/atelier-kyo-manager/', tags: ['利益計算', '価格調査'] },
+      'リファクタリング': { desc: '動作を変えずにコード構造を改善する作業。session_managerを4クラスに分割し、重複スクリプト12ファイルを削除する等を実施。', path: '01_DECISIONS/atelier-kyo-manager/', tags: ['リファクタリング', 'コード品質'] },
+      'reserve-optimizer': { desc: 'LINE連携の美容室予約最適化システム。予約管理・CRM・多言語対応・Firestore移行完了。970件のテスト全通過。', path: '01_DECISIONS/reserve-optimizer/', tags: ['LINE', 'GAS', 'Firestore'] },
+      'LINE予約システム': { desc: 'LINE Messaging API経由でお客様が予約・変更・キャンセルできる仕組み。GAS（Google Apps Script）でバックエンドを実装。', path: '01_DECISIONS/reserve-optimizer/', tags: ['LINE', 'GAS', '予約'] },
+      'CRM・i18n': { desc: 'CRM=顧客関係管理（Customer Relationship Management）。i18n=多言語化（internationalization）。顧客情報管理と日英対応を実装。', path: '01_DECISIONS/reserve-optimizer/', tags: ['CRM', '多言語', 'i18n'] },
+      'Firestore移行': { desc: 'スプレッドシートからFirestore（Googleのクラウドデータベース）への移行。FirestoreService+SheetService実装、283件テスト全通過。', path: '01_DECISIONS/reserve-optimizer/', tags: ['Firestore', 'DB移行', 'GCP'] },
+      'orchestrix': { desc: 'オーケストレーション（複数サービスの指揮・調整）基盤。改良点25件・セキュリティ強化済み。テストカバレッジ81%。', path: '01_DECISIONS/orchestrix/', tags: ['オーケストレーション', 'Python'] },
+      '改良点25件': { desc: '3LLMによるコードレビューで発見された改善点。セキュリティ・パフォーマンス・コード品質のカテゴリで分類・優先順位付けして対応。', path: '01_DECISIONS/orchestrix/', tags: ['コードレビュー', '改善'] },
+      'セキュリティ強化': { desc: 'STRIDE分析（Spoofing/Tampering/Repudiation/情報漏洩/DoS/権限昇格）で脅威を特定し、対策を実装。', path: '01_DECISIONS/orchestrix/', tags: ['セキュリティ', 'STRIDE'] },
+      'openclaw-stack': { desc: 'AIニュース自動収集→要約→X(Twitter)投稿パイプライン。Docker Composeで複数サービスを管理。', path: '01_DECISIONS/openclaw-stack/', tags: ['自動化', 'X/Twitter', 'Docker'] },
+      'ガイドサイト・HTML変換': { desc: 'MarkdownソースをPythonスクリプト(convert.py)でHTML化し、GitHub Pagesで公開するパイプライン。', path: '01_DECISIONS/openclaw-stack/', tags: ['GitHub Pages', 'Markdown', 'HTML'] },
+      'Zenn記事': { desc: '技術系ブログサービスZennへの記事投稿管理。公開優先度付きインデックスで20本以上のドラフトを管理中。', path: '01_DECISIONS/zenn/', tags: ['Zenn', 'ブログ', '技術記事'] },
+      '技術記事レビュー・Mermaid変換': { desc: 'GLM/MiniMaxで記事の品質レビューを実施。MermaidはテキストでUML図を書ける記法。ZennはMermaid対応のため図をコード変換。', path: '01_DECISIONS/zenn/', tags: ['Zenn', 'Mermaid', 'レビュー'] },
+      '💼 キャリア戦略': { desc: 'AI活用エンジニアへの転職戦略。GLM・MiniMax統合判断でフェーズ0追加、タイムライン1〜1.5年と設定。', path: '40_CAREER/', tags: ['キャリア', '転職'] },
+      '基本方針': { desc: 'フリーランスより就職を優先する方針。理由：安定収入・スキル向上・チーム経験。Phase 0としてポートフォリオ整備を先行。', path: '01_DECISIONS/career/2026-05-26_GLM-MiniMax統合判断.md', tags: ['就職', 'キャリア戦略'] },
+      '就職優先（GLM評価）': { desc: 'GLM-5.1が評価した結果、フリーランスより就職の方がリスク低・スキル向上・実績構築に有利と判断。MiniMaxも同意見。', path: '01_DECISIONS/career/2026-05-26_GLM-MiniMax統合判断.md', tags: ['就職', 'GLM'] },
+      'タイムライン1〜1.5年': { desc: 'Phase 0（ポートフォリオ整備・3ヶ月）→Phase 1（就活開始）→Phase 2（入社・スキル向上）の流れ。', path: '01_DECISIONS/career/2026-05-26_GLM-MiniMax統合判断.md', tags: ['タイムライン', 'フェーズ'] },
+      '応募': { desc: '応募先3社の選定とアプローチ方針。AIネイティブな開発経験をフレーミングして差別化。', path: '40_CAREER/01_ドキュメント/応募戦略_v2.md', tags: ['応募', '就活'] },
+      '応募先3社・アプローチ方針': { desc: 'SES型・受託系・自社サービス系を3社選定。Claude Code活用実績をポートフォリオとして提示するアプローチ。', path: '40_CAREER/01_ドキュメント/応募戦略_v2.md', tags: ['応募', 'ポートフォリオ'] },
+      '面接対策': { desc: '50項目の評価シートと30秒/2分/5分の3段階ピッチを準備。「AIネイティブ開発者」としてのフレーミング。', path: '40_CAREER/01_ドキュメント/面接戦略.md', tags: ['面接', '対策'] },
+      '50項目評価': { desc: '技術力・コミュニケーション・問題解決力等50項目で自己評価し、強み・弱みを明確化した面接準備シート。', path: '40_CAREER/01_ドキュメント/面接戦略.md', tags: ['自己評価', '面接'] },
+      '30秒/2分/5分ピッチ': { desc: '面接の文脈に応じて使い分けるピッチ。30秒=一言自己紹介、2分=経歴+強み、5分=実績+ビジョン。', path: '40_CAREER/01_ドキュメント/面接ピッチ_v2.md', tags: ['ピッチ', '自己PR'] },
+      'ポートフォリオ': { desc: 'NexusCore（LLMエージェント）とOpenClaw（AI自動化）の2本柱。GitHub + ガイドサイト + デモ動画で訴求。', path: '01_DECISIONS/career/2026-05-25_ポートフォリオ戦略とNexusCoreデモ準備.md', tags: ['ポートフォリオ', 'GitHub'] },
+      'NexusCore・OpenClaw': { desc: 'NexusCore=多段LLMエージェント基盤。OpenClaw=AIニュース自動収集・投稿システム。どちらもGitHub公開・ガイドサイト付き。', path: '01_DECISIONS/career/2026-05-25_ポートフォリオ戦略とNexusCoreデモ準備.md', tags: ['NexusCore', 'OpenClaw'] },
+      '🛠️ 開発手法': { desc: '新規プロジェクト立ち上げ時に使う手法セレクタ。プロジェクトの性質に応じてTDD/BDD/DDD等を選択する。', path: '00_SYSTEM/開発手法カタログ/', tags: ['開発手法', '設計'] },
+      '手法カタログ': { desc: 'プロジェクトタイプ別に最適な開発手法を選べるカタログ。5パターンのレシピから選ぶセレクタ方式。', path: '00_SYSTEM/開発手法カタログ/00_セレクタ.md', tags: ['開発手法', 'カタログ'] },
+      'TDD（Red-Green-Refactor）': { desc: 'テスト駆動開発（Test-Driven Development）。先にテストを書いて失敗(Red)→実装して通過(Green)→整理(Refactor)のサイクルで開発する手法。バグを早期発見できる。', path: '00_SYSTEM/開発手法カタログ/01_TDD.md', tags: ['TDD', 'テスト', '開発手法'] },
+      'BDD（Given-When-Then）': { desc: '振舞駆動開発（Behavior-Driven Development）。Given（前提）→When（操作）→Then（結果）の形式でテストを書く。ユーザー視点で仕様を記述できる。', path: '00_SYSTEM/開発手法カタログ/02_BDD.md', tags: ['BDD', 'テスト', '仕様'] },
+      'DDD（値オブジェクト・エンティティ）': { desc: 'ドメイン駆動設計（Domain-Driven Design）。ビジネスの概念をコードに直接反映する設計思想。値オブジェクト=不変の値、エンティティ=IDを持つオブジェクト。', path: '00_SYSTEM/開発手法カタログ/03_DDD.md', tags: ['DDD', 'ドメイン', '設計'] },
+      '仕様駆動開発（OpenAPI/Zod）': { desc: 'API仕様（OpenAPI）やスキーマ（Zod）を先に定義してから実装する手法。フロント・バックエンドの齟齬を防ぎ、型安全な開発ができる。', path: '00_SYSTEM/開発手法カタログ/04_仕様駆動開発.md', tags: ['OpenAPI', 'Zod', '仕様駆動'] },
+      'クリーンアーキテクチャ': { desc: 'Robert C. Martin提唱の設計思想。ビジネスロジックを外側（DB・UI・フレームワーク）から独立させ、依存関係を内側に向ける。テストしやすく変更に強い設計になる。', path: '00_SYSTEM/開発手法カタログ/05_クリーンアーキテクチャ.md', tags: ['アーキテクチャ', '設計', 'レイヤー'] },
+      '設計原則': { desc: '良いコードを書くための普遍的な原則集。SOLID/DRY/KISS/YAGNIが代表例。', path: '00_SYSTEM/開発手法カタログ/06_設計原則.md', tags: ['設計原則', 'SOLID'] },
+      'SOLID / DRY / KISS / YAGNI': { desc: 'SOLID=5つのOOP設計原則。DRY=同じコードを繰り返さない(Don\'t Repeat Yourself)。KISS=シンプルに保つ。YAGNI=今必要でないものは作らない。全て「変更しやすいコード」のための原則。', path: '00_SYSTEM/開発手法カタログ/06_設計原則.md', tags: ['SOLID', 'DRY', 'KISS', 'YAGNI'] },
+      'CI/CD': { desc: '継続的インテグレーション/継続的デリバリー。コードをpushするたびに自動でテスト・ビルド・デプロイを実行する仕組み。', path: '00_SYSTEM/開発手法カタログ/07_CI-CD.md', tags: ['CI/CD', 'GitHub Actions'] },
+      'GitHub Actions + Trunk-Based': { desc: 'GitHub Actionsでpush時に自動テスト実行。Trunk-Basedはmainブランチに直接コミットする開発スタイル（長期ブランチを作らない）。', path: '00_SYSTEM/開発手法カタログ/07_CI-CD.md', tags: ['GitHub Actions', 'Trunk-Based'] },
+      '自律開発ループ': { desc: 'CronCreateでスケジュール実行し、GitHubのIssueを自動で実装するループ。毎時7分(atelier-kyo)・毎時23分(NexusCore)で動く。', path: '00_SYSTEM/共通ルール/自律開発ループ.md', tags: ['Cron', '自動化', 'Issue'] },
+      'CronCreate + Issue自動実装': { desc: 'Claude CodeのCronCreate機能でスケジュール設定→指定時刻にGitHub Issueを読んで自動実装→コミット・プッシュまで人間不在で完結。', path: '00_SYSTEM/共通ルール/自律開発ループ.md', tags: ['CronCreate', 'GitHub', '自動実装'] },
+      '自動リファクタリング': { desc: 'Plan（方針策定）→Tracker（進捗管理）→CronCreate（自動実行）の3層でリファクタリングを自律的に進める手法。', path: '00_SYSTEM/共通ルール/自動リファクタリング実行手法.md', tags: ['リファクタリング', '自動化'] },
+      '📚 ガイドサイト': { desc: '公開中のガイドサイト群。ssot-guide（独立リポジトリ）+ guides（37冊）。GitHub Pagesで無料公開。', path: 'https://fukukei23.github.io/guides/', tags: ['GitHub Pages', 'ガイド'] },
+      'ssot-guide（独立リポジトリ）': { desc: 'SSOTシステム設計・LLMルーティング・自律開発ループを解説するガイドサイト。guides本体とは独立したリポジトリ。', path: 'https://fukukei23.github.io/ssot-guide/', tags: ['ssot-guide', 'SSOT'] },
+      'SSOT知識管理ガイド': { desc: 'このSSOTシステム（obsidian-ssot）の使い方・設計思想・LLMルーティングをわかりやすく解説した公開ガイド。', path: 'https://fukukei23.github.io/ssot-guide/', tags: ['SSOT', 'ガイド', '公開'] },
+      'Claude Code系（12冊）': { desc: 'Claude Codeの使い方を体系的に解説した12冊のシリーズ。初心者向けクイックスタートから上級者向け自動化まで網羅。', path: 'https://fukukei23.github.io/guides/', tags: ['Claude Code', 'ガイドシリーズ'] },
       'クイックスタート': { desc: 'Claude Codeのインストール・初期設定・基本操作を解説。初めて使う人向けの入門ガイド。', path: 'https://fukukei23.github.io/guides/claude-code/', tags: ['入門', 'セットアップ'] },
       'LLM切り替え・SSH接続': { desc: 'Z.AI/MiniMax/OpenRouterへのLLM切り替え設定と、AndroidスマホからClaude CodeをSSH操作するガイド。', path: 'https://fukukei23.github.io/guides/llm-routing/', tags: ['LLM', 'SSH', 'Android'] },
       'Hooks設定・MCP設定': { desc: 'PreToolUse/PostToolUse/SessionStart/Stop/Notificationの各Hookの設定方法と、MCPサーバーの追加・管理・デバッグ方法。', path: 'https://fukukei23.github.io/guides/claude-hooks/', tags: ['Hooks', 'MCP', '設定'] },
@@ -430,10 +319,9 @@
       'OpenClaw系（5冊）': { desc: 'OpenClawシステム（AIニュース自動投稿）の運用・監視・復旧手順をまとめた5冊のガイド。', path: 'https://fukukei23.github.io/guides/', tags: ['OpenClaw', '運用ガイド'] },
       '運用監視・再起動・復旧': { desc: '日次ヘルスチェック・ログ確認・フル再起動手順。Dockerサービスが落ちた時の復旧コマンド集。', path: 'https://fukukei23.github.io/guides/', tags: ['運用', 'Docker', '復旧'] },
       'AIニュースパイプライン': { desc: 'AI関連ニュースを自動収集→GLMで要約→X(Twitter)に自動投稿する6ステップのパイプライン。', path: 'https://fukukei23.github.io/guides/', tags: ['AI', 'Twitter', '自動化'] },
-      // インフラ・共通
       '🌐 インフラ・共通': { desc: 'vault全体の共通ルール・構造・LLMルーティング・日次ログ管理。すべての基盤となるセクション。', path: '00_SYSTEM/共通ルール/', tags: ['共通', 'インフラ'] },
       'ルール・運用': { desc: 'SSOTの使い方・記録手順・バックログ管理・チャーター（vault憲法）。全プロジェクト共通のルール。', path: '00_SYSTEM/共通ルール/ルール.md', tags: ['ルール', '運用'] },
-      '共通ルール・記録手順': { desc: 'タスク終了時の記録手順（Steps 1-7）。SSOT決定ファイル→日記ハブ→MOC→リンクの順で記録する。「後で書く」は禁止。', path: '00_SYSTEM/共通ルール/記録手順.md', tags: ['記録', 'SSOT'] },
+      '共通ルール・記録手順': { desc: 'タスク終了時の記録手順（Steps 1-7）。SSOT決定ファイル→日記ハブ→MOC→リンクの順で記録。「後で書く」は禁止。', path: '00_SYSTEM/共通ルール/記録手順.md', tags: ['記録', 'SSOT'] },
       'バックログ・チャーター': { desc: 'バックログ=セッションをまたいだタスクの駐車場。チャーター=vault全体の基本ルール（人間のみ変更可）。', path: '00_SYSTEM/バックログ.md', tags: ['バックログ', 'チャーター'] },
       '知識ベース': { desc: 'リポジトリ索引・用語集・ユーザープロファイル等、SSOTの基盤となる参照情報。', path: '00_SYSTEM/', tags: ['知識ベース', '参照'] },
       'リポジトリ索引（23個）': { desc: '全23リポジトリの概要・関係性・ステータスをYAML+Markdownで管理。週次GitHub Actionsで自動更新される。', path: '00_SYSTEM/リポジトリ索引.md', tags: ['GitHub', 'リポジトリ', '索引'] },
@@ -442,7 +330,7 @@
       '🟡 GLM-5.1（メイン）': { desc: 'Z.AI社のGLM-5.1モデル。低コスト・高速で日本語対応が良好。Claude Codeのメインモデルとして全般的なタスクに使用。', path: '00_SYSTEM/共通ルール/LLMルーティング.md', tags: ['GLM', 'Z.AI', 'LLM'] },
       '🟠 MiniMax（フォールバック）': { desc: 'MiniMax社のLLM。GLM失敗時・ピーク時間帯・大量処理タスクで自動的に切り替わる。要約・フォーマット変換等が得意。', path: '00_SYSTEM/共通ルール/LLMルーティング.md', tags: ['MiniMax', 'フォールバック', 'LLM'] },
       '🔵 Sonnet（要許可）': { desc: 'AnthropicのClaude Sonnetモデル。高性能だがコストが高いため、ユーザーの明示的な許可がないと使えないルール。', path: '00_SYSTEM/共通ルール/LLMルーティング.md', tags: ['Sonnet', 'Anthropic', 'Claude'] },
-      '日次ログ': { desc: '毎日のセッション記録。10_DAILY/フォルダに日付ごとのファイルで管理。詳細は01_DECISIONSへのリンクのみ書き、日記には書かない。', path: '10_DAILY/', tags: ['日記', 'ログ'] },
+      '日次ログ': { desc: '毎日のセッション記録。10_DAILY/フォルダに日付ごとのファイルで管理。', path: '10_DAILY/', tags: ['日記', 'ログ'] },
       '10_DAILY/（日記ハブ）': { desc: 'セッション終了時に必ず書くハブファイル。3〜5行のサマリー+詳細へのリンクのみ記載。詳細を直書きしないのがルール。', path: '10_DAILY/', tags: ['日記', 'ハブ', '記録'] },
     };
 
@@ -544,26 +432,22 @@
 - 10_DAILY/（日記ハブ）
 `;
 
-    const panel     = document.getElementById('side-panel');
-    const pTitle    = document.getElementById('panel-title');
-    const pDesc     = document.getElementById('panel-desc');
-    const pTags     = document.getElementById('panel-tags');
-    const pPath     = document.getElementById('panel-path');
-    const hint      = document.getElementById('hint');
+    const panel  = document.getElementById('side-panel');
+    const pTitle = document.getElementById('panel-title');
+    const pDesc  = document.getElementById('panel-desc');
+    const pTags  = document.getElementById('panel-tags');
+    const pPath  = document.getElementById('panel-path');
+    const hint   = document.getElementById('hint');
 
     function showPanel(text) {
-      const info = descriptions[text.trim()];
+      const key  = text.trim();
+      const info = descriptions[key];
       if (!info) return;
-
-      pTitle.textContent = text.trim();
+      pTitle.textContent = key;
       pDesc.textContent  = info.desc;
       pTags.innerHTML    = (info.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
-      if (info.path) {
-        pPath.textContent = '📁 ' + info.path;
-        pPath.style.display = 'block';
-      } else {
-        pPath.style.display = 'none';
-      }
+      pPath.style.display = info.path ? 'block' : 'none';
+      if (info.path) pPath.textContent = '📁 ' + info.path;
       panel.classList.add('open');
       hint.classList.add('hidden');
     }
@@ -574,7 +458,6 @@
 
       const transformer = new Transformer();
       const { root, features } = transformer.transform(markdown.trim());
-
       const { styles, scripts } = transformer.getUsedAssets(features);
       if (styles) loadCSS(styles);
       if (scripts) await loadJS(scripts, { getMarkmap: () => window.markmap });
@@ -587,14 +470,17 @@
         duration: 400,
       }, root);
 
+      // 初期テキスト色を適用
+      setTimeout(applyNodeTextColor, 600);
+
       window.addEventListener('resize', () => mm.fit());
 
+      // ノードクリック
       svg.addEventListener('click', (e) => {
         const target = e.target.closest('g.markmap-node');
         if (!target) return;
         const textEl = target.querySelector('foreignObject div, text');
-        const text = textEl ? textEl.textContent : '';
-        if (text) showPanel(text);
+        if (textEl) showPanel(textEl.textContent);
       });
     });
   </script>
