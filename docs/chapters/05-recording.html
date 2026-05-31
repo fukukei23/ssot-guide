@@ -245,6 +245,34 @@ done
 3. README.mdのDB設定手順を更新
 </code></pre>
 <hr />
+<h2>record-ssot スキルによる自動記録</h2>
+<p>Claude Code に <code>record-ssot</code> スキルを組み込むと、「記録して」の一言で SSOT への記録・日記追記・ガイド転記まで自動化できる。</p>
+<h3>フロー</h3>
+<pre><code>「記録して」と言う
+    ↓
+GLM が内容を分析して振り分け先を判定
+    ↓
+📋 判定結果を一画面で提示（転記先も含む）
+    ↓
+「yes」で承認
+    ↓
+SSOT ファイル作成 → _INDEX.md 追記 → 日記追記
+→ ガイド転記（承認済みなら追加確認なし）→ push
+</code></pre>
+<h3>判定結果の画面例</h3>
+<pre><code>📋 記録先の判定結果
+
+📁 メイン: 01_DECISIONS/ssot-guide/2026-05-31_テスト構成.md
+📅 日記追記: あり（10_DAILY/2026-05-31.md）
+📖 ガイド転記: あり → ssot-guide「09_ガイドサイト構築.md」
+   └ 追記内容: test_convert.py の9クラス構成・テスト保護パターン
+🏷️ タグ: #テスト #品質管理
+
+この振り分けでよいですか？[yes/修正指示]
+</code></pre>
+<p>「yes」と答えるだけで、ファイル作成・日記追記・ガイド転記・push まで一括実行される。</p>
+<div class="callout callout-info"><p>転記先と追記概要はフェーズ2の判定画面に統合されているため、別途「転記案を見せますか？」の確認は発生しない。</p></div>
+<hr />
 <h2>外部公開コンテンツ管理（20_PUBLISHING）</h2>
 <pre><code>20_PUBLISHING/
 ├── _INDEX.md              ← 全記事の状態管理
@@ -281,7 +309,7 @@ done
 
     <footer class="site-footer">
         <p>SSOT Guide — <a href="https://github.com/fukukei23/ssot-guide">GitHub</a></p>
-        <p class="site-version">v1.13 · 2026.05.31</p>
+        <p class="site-version">v1.14 · 2026.05.31</p>
     </footer>
 
     <script src="../assets/script.js"></script>
