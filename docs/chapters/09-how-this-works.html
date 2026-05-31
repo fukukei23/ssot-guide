@@ -279,6 +279,34 @@ graph TD
 }
 </code></pre>
 <p>指定した見出しの直前に図が挿入される。</p>
+<hr />
+<h2>バージョン管理</h2>
+<p><code>VERSION</code> ファイルでビルド番号を管理する。ビルドのたびにマイナーバージョンが自動インクリメントされ、フッターに表示される。</p>
+<pre><code>VERSION ファイル内容: 1.10
+表示: v1.10 · 2026.05.31
+</code></pre>
+<h3>仕組み</h3>
+<pre><code class="language-python"># convert.py の get_build_info()
+def get_build_info() -&gt; tuple[str, str]:
+    current = VERSION_FILE.read_text().strip()   # &quot;1.10&quot;
+    new_version = bump_version(current)           # &quot;1.11&quot;
+    VERSION_FILE.write_text(new_version + &quot;\n&quot;)
+    today = date.today().strftime(&quot;%Y.%m.%d&quot;)
+    return new_version, today
+</code></pre>
+<p><code>python3 convert.py</code> を実行するたびに VERSION が上がる。</p>
+<h3>テスト時の注意</h3>
+<p>テストが <code>main()</code> を呼ぶたびにバージョンが上がってしまう。<code>unittest.mock.patch</code> で固定する:</p>
+<pre><code class="language-python">@pytest.fixture(autouse=True)
+def _build(self):
+    import convert
+    with patch.object(convert, &quot;get_build_info&quot;, return_value=(&quot;TEST&quot;, &quot;2026.01.01&quot;)):
+        convert.main()
+</code></pre>
+<h3>初期化</h3>
+<p>新規サイトを立ち上げた時は <code>VERSION</code> ファイルを作成する:</p>
+<pre><code class="language-bash">echo &quot;1.0&quot; &gt; VERSION
+</code></pre>
 
         </article>
 
@@ -295,7 +323,7 @@ graph TD
 
     <footer class="site-footer">
         <p>SSOT Guide — <a href="https://github.com/fukukei23/ssot-guide">GitHub</a></p>
-        <p class="site-version">v1.10 · 2026.05.31</p>
+        <p class="site-version">v1.11 · 2026.05.31</p>
     </footer>
 
     <script src="../assets/script.js"></script>
