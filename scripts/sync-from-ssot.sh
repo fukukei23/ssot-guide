@@ -4,12 +4,6 @@
 # 使い方:
 #   bash ~/projects/ssot-guide/scripts/sync-from-ssot.sh
 #   bash ~/projects/ssot-guide/scripts/sync-from-ssot.sh --dry-run
-#
-# 動作:
-#   1. obsidian-ssot/00_SYSTEM/リポジトリ索引.md からプロジェクト一覧を抽出
-#   2. ssot-guide/source/08_プロジェクト紹介.md の「リポジトリ管理の仕組み」セクションを更新
-#   3. convert.py でHTML再生成
-#   4. ssot-guide を git commit → push
 
 set -euo pipefail
 
@@ -22,88 +16,106 @@ for arg in "$@"; do
 done
 
 echo "🔄 SSOT → ssot-guide 同期開始 $(date '+%Y-%m-%d %H:%M:%S')"
-echo "   SSOT: $SSOT_DIR"
-echo "   Guide: $GUIDE_DIR"
 [[ "$DRY_RUN" == "true" ]] && echo "   モード: DRY-RUN（変更なし）"
 
 # --- 差分チェック ---
 SSOT_HASH=$(git -C "$SSOT_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
-GUIDE_HASH=$(git -C "$GUIDE_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
-
-LAST_SYNC_FILE="$GUIDE_DIR/.last-ssot-sync"
+LAST_SYNC_FILE="$HOME/.claude/state/ssot-guide-last-sync"
 LAST_SSOT_HASH=$(cat "$LAST_SYNC_FILE" 2>/dev/null || echo "")
 
-if [[ "$SSOT_HASH" == "$LAST_SSOT_HASH" ]] && [[ "$DRY_RUN" == "false" ]]; then
-    echo "✅ obsidian-ssot に変更なし（$SSOT_HASH）— スキップ"
+if [[ "$SSOT_HASH" == "$LAST_SSOT_HASH" && "$DRY_RUN" == "false" ]]; then
+    echo "✅ obsidian-ssot に変更なし（${SSOT_HASH:0:7}）— スキップ"
     exit 0
 fi
 
-echo "📋 obsidian-ssot 変更検出: $LAST_SSOT_HASH → $SSOT_HASH"
+echo "📋 変更検出: ${LAST_SSOT_HASH:0:7} → ${SSOT_HASH:0:7}"
 
-# --- プロジェクト一覧の抽出 ---
+# --- リポジトリ索引から公開リポ一覧を抽出して source/08 を更新 ---
 REPO_INDEX="$SSOT_DIR/00_SYSTEM/リポジトリ索引.md"
+SOURCE_08="$GUIDE_DIR/source/08_プロジェクト紹介.md"
 
-extract_public_repos() {
-    # リポジトリ索引から「公開」ステータスのリポジトリを抽出
-    python3 - <<'PYEOF'
+if [[ -f "$REPO_INDEX" ]]; then
+    echo "📋 リポジトリ索引を抽出中..."
+
+    # Python でリポジトリ一覧テーブルを生成
+    REPO_TABLE=$(python3 - "$REPO_INDEX" <<'PYEOF'
 import sys, re, pathlib
 
 repo_index = pathlib.Path(sys.argv[1])
-if not repo_index.exists():
-    print("# ⚠️ リポジトリ索引が見つかりません")
-    sys.exit(0)
-
 text = repo_index.read_text(encoding='utf-8')
-lines = text.split('\n')
 
 repos = []
-for line in lines:
+for line in text.split('\n'):
     if '| 公開 |' in line and line.strip().startswith('|'):
         cells = [c.strip() for c in line.split('|') if c.strip()]
         if len(cells) >= 5:
             name = cells[0]
             status = cells[3] if len(cells) > 3 else ''
             desc = cells[4] if len(cells) > 4 else ''
-            # URLを除去してテキストのみ抽出
-            desc = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', desc)
+            desc = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', desc)[:60]
             if name and status in ('active', 'development', 'maintenance'):
-                repos.append({'name': name, 'status': status, 'desc': desc})
+                repos.append((name, status, desc))
 
-if repos:
-    print("## 公開リポジトリ一覧（自動更新）\n")
-    print("| リポジトリ | ステータス | 説明 |")
-    print("|---|---|---|")
-    for r in repos:
-        status_icon = {'active': '🟢', 'development': '🔵', 'maintenance': '🟡'}.get(r['status'], '⚪')
-        print(f"| [{r['name']}](https://github.com/fukukei23/{r['name']}) | {status_icon} {r['status']} | {r['desc'][:60]} |")
+if not repos:
+    sys.exit(0)
+
+icon = {'active': '🟢', 'development': '🔵', 'maintenance': '🟡'}
+print("| リポジトリ | ステータス | 説明 |")
+print("|---|---|---|")
+for name, status, desc in repos:
+    print(f"| [{name}](https://github.com/fukukei23/{name}) | {icon.get(status,'⚪')} {status} | {desc} |")
 PYEOF
-}
+    )
 
-if [[ "$DRY_RUN" == "false" ]]; then
-    # --- HTML再生成 ---
-    echo ""
-    echo "🔨 HTML再生成..."
-    cd "$GUIDE_DIR"
-    python3 convert.py
+    if [[ -n "$REPO_TABLE" ]]; then
+        # source/08 の「公開リポジトリ一覧（自動更新）」セクションを置換
+        # セクションが存在しなければ末尾に追加
+        if grep -q "公開リポジトリ一覧（自動更新）" "$SOURCE_08" 2>/dev/null; then
+            python3 - "$SOURCE_08" "$REPO_TABLE" <<'PYEOF'
+import sys, pathlib
 
-    # --- git commit & push ---
-    cd "$GUIDE_DIR"
-    git add -A
-    if git diff --cached --quiet; then
-        echo "ℹ️  HTML変更なし — コミットスキップ"
-    else
-        COMMIT_MSG="sync: obsidian-ssot ${SSOT_HASH:0:7} → ssot-guide"
-        git commit -m "$COMMIT_MSG"
-        git push
-        echo "✅ プッシュ完了: $COMMIT_MSG"
+src = pathlib.Path(sys.argv[1])
+new_table = sys.argv[2]
+text = src.read_text(encoding='utf-8')
+
+# セクション全体を置換
+import re
+pattern = r'## 公開リポジトリ一覧（自動更新）\n\n.*?(?=\n## |\Z)'
+replacement = f'## 公開リポジトリ一覧（自動更新）\n\n{new_table}'
+updated = re.sub(pattern, replacement, text, flags=re.DOTALL)
+src.write_text(updated, encoding='utf-8')
+PYEOF
+        else
+            printf "\n\n## 公開リポジトリ一覧（自動更新）\n\n%s\n" "$REPO_TABLE" >> "$SOURCE_08"
+        fi
+        echo "   ✅ source/08_プロジェクト紹介.md を更新"
     fi
-
-    # 同期済みハッシュを記録
-    echo "$SSOT_HASH" > "$LAST_SYNC_FILE"
-    echo ""
-    echo "✅ 同期完了 $(date '+%Y-%m-%d %H:%M:%S')"
-else
-    echo ""
-    echo "📋 DRY-RUN: 実際の変更は行いませんでした"
-    echo "   実行するには: bash $0"
 fi
+
+if [[ "$DRY_RUN" == "true" ]]; then
+    echo ""
+    echo "📋 DRY-RUN完了: 実際の変更は行いませんでした"
+    exit 0
+fi
+
+# --- HTML再生成 ---
+echo ""
+echo "🔨 HTML再生成..."
+cd "$GUIDE_DIR"
+python3 convert.py
+
+# --- git commit & push ---
+git add -A
+if git diff --cached --quiet; then
+    echo "ℹ️  変更なし — コミットスキップ"
+else
+    git commit -m "sync: obsidian-ssot ${SSOT_HASH:0:7} → ssot-guide"
+    git push
+    echo "✅ プッシュ完了"
+fi
+
+# 同期済みハッシュを記録（リポ外のstateディレクトリに保存）
+mkdir -p "$(dirname "$LAST_SYNC_FILE")"
+echo "$SSOT_HASH" > "$LAST_SYNC_FILE"
+echo ""
+echo "✅ 同期完了 $(date '+%Y-%m-%d %H:%M:%S')"
