@@ -23,19 +23,207 @@
       height: calc(100vh - 44px);
       display: block;
     }
+
+    /* ツールチップ */
+    #tooltip {
+      position: fixed;
+      display: none;
+      max-width: 320px;
+      background: #1c2128;
+      border: 1px solid #388bfd;
+      border-radius: 10px;
+      padding: 14px 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      z-index: 9999;
+      pointer-events: none;
+    }
+    #tooltip.visible { display: block; }
+    #tooltip h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #79c0ff;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    #tooltip p {
+      font-size: 12px;
+      color: #c9d1d9;
+      line-height: 1.6;
+    }
+    #tooltip .tag {
+      display: inline-block;
+      font-size: 10px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      padding: 1px 6px;
+      margin: 4px 2px 0;
+      color: #8b949e;
+    }
+    #tooltip .path {
+      font-size: 10px;
+      color: #3fb950;
+      margin-top: 6px;
+      font-family: monospace;
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>🗺️ SSOT 全体マップ</h1>
-    <span>スクロール: ズーム ／ ドラッグ: 移動 ／ クリック: 展開/折りたたみ</span>
+    <span>スクロール: ズーム ／ ドラッグ: 移動 ／ ノードクリック: 詳細表示</span>
   </header>
   <svg id="mindmap-svg"></svg>
+  <div id="tooltip"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.17"></script>
   <script>
+    // ノード説明データ
+    const descriptions = {
+      'SSOT 全体マップ': {
+        desc: 'obsidian-ssotリポジトリ全体のナレッジベース。LLM・人間どちらもここから目的の情報に到達できる。',
+        path: 'obsidian-ssot/',
+        tags: ['SSOT', 'ナレッジベース']
+      },
+      '⚙️ Claude Code 設定・運用': {
+        desc: 'Claude Codeの設定・Hook・MCP・セキュリティなど運用全般のハブ。',
+        path: '00_SYSTEM/ + 01_DECISIONS/claude-code/',
+        tags: ['Claude Code', '設定']
+      },
+      '完了通知': {
+        desc: 'Stopフック経由でWindowsトースト通知とターミナルベルを鳴らす仕組み。長時間タスク終了を自動検知。',
+        path: '00_SYSTEM/完了通知設定ハブ.md',
+        tags: ['Hook', 'Stop']
+      },
+      'セキュリティ': {
+        desc: 'PreToolUseフックで19種の破壊的コマンドをブロック。APIキーの露出防止ポリシーも含む。',
+        path: '00_SYSTEM/セキュリティ設定ハブ.md',
+        tags: ['PreToolUse', 'シークレット管理']
+      },
+      'PreToolUseガード': {
+        desc: '`rm -rf *`、`git push --force`、DROP/DELETE等の危険操作をguard-destructive-commands.shで自動ブロック。実行前に強制停止する。',
+        path: '~/.claude/scripts/security/guard-destructive-commands.sh',
+        tags: ['Hook', 'PreToolUse', 'セキュリティ']
+      },
+      'コマンド安全チェック': {
+        desc: 'bash -x / cat -A / grep無マスクなどシークレットが漏洩しやすいコマンドを検査・ブロック。',
+        path: '~/.claude/scripts/security/check-command-safety.py',
+        tags: ['セキュリティ', 'シークレット']
+      },
+      'シークレット管理': {
+        desc: 'APIキー値を会話・ファイルに書かない。~/.secrets.envに一元化し、SessionStart hookで注入する。',
+        path: '01_DECISIONS/claude-code/参考資料/シークレット管理ポリシー.md',
+        tags: ['APIキー', 'セキュリティ']
+      },
+      'MCPツール': {
+        desc: '6つのMCPサーバー（GLM/MiniMax/computer-use/Chrome/Preview/scheduled-tasks）の使い分け基準を定義。',
+        path: '00_SYSTEM/MCPツール使い分けガイド.md',
+        tags: ['MCP', 'ツール']
+      },
+      'Claude Codeガイド': {
+        desc: 'クイックスタートからHooks・MCP・トラブルシューティングまで全12冊のガイドサイト。',
+        path: '00_SYSTEM/Claude-Codeガイド/',
+        tags: ['ガイド', 'ドキュメント']
+      },
+      'ナレッジリント': {
+        desc: 'SSOTの孤立ファイル・リンク切れ・更新漏れを定期クロールで検出し、自動リンク・可視化する仕組み。',
+        path: '01_DECISIONS/claude-code/2026-05-26_ナレッジリント自動化システム.md',
+        tags: ['自動化', 'Cron']
+      },
+      'glm-rate-proxy': {
+        desc: 'Claude Code→localhost:8787→Z.AI/MiniMaxのローカルプロキシ。ピーク時間帯(15-19時)はMiniMaxに強制ルーティング。',
+        path: '~/.claude/scripts/glm-rate-proxy/',
+        tags: ['GLM', 'MiniMax', 'プロキシ']
+      },
+      'ピーク時間帯ルーティング': {
+        desc: 'JST 15:00-19:00はGLMを完全ブロックしMiniMaxのみ使用。GLMトークン消費を3倍防止する。',
+        path: '~/.claude/scripts/glm-rate-proxy/proxy.js',
+        tags: ['GLM', 'ルーティング']
+      },
+      'エラー時自動フォールバック': {
+        desc: '429/500/502/タイムアウト発生時にGLM→MiniMaxへ自動切り替え。ユーザー操作不要。',
+        path: '~/.claude/scripts/glm-rate-proxy/',
+        tags: ['フォールバック', 'MiniMax']
+      },
+      '🚀 プロジェクト': {
+        desc: '全プロジェクトの技術決定記録。いつ・なぜそう決めたかの変遷を追跡できる。',
+        path: '01_DECISIONS/',
+        tags: ['プロジェクト', '決定記録']
+      },
+      'NexusCore': {
+        desc: '多段LLMルーティング・エージェント設計の研究プロジェクト。ConstitutionalCouncil等の高度なエージェントを実装。',
+        path: '01_DECISIONS/NexusCore/',
+        tags: ['LLM', 'エージェント', 'Python']
+      },
+      'atelier-kyo-manager': {
+        desc: 'BUYMAスクレイパー・価格調査・利益計算・仕入れ管理システム。Celery+Redisの非同期基盤導入予定。',
+        path: '01_DECISIONS/atelier-kyo-manager/',
+        tags: ['BUYMA', 'スクレイパー', 'Python']
+      },
+      'reserve-optimizer': {
+        desc: 'LINE連携の予約システム。CRM・多言語(i18n)・Firestore移行完了。283件のテスト全通過。',
+        path: '01_DECISIONS/reserve-optimizer/',
+        tags: ['LINE', 'Firestore', 'GAS']
+      },
+      'orchestrix': {
+        desc: 'オーケストレーション基盤。改良点25件・セキュリティ強化済み。カバレッジ81%。',
+        path: '01_DECISIONS/orchestrix/',
+        tags: ['オーケストレーション', 'Python']
+      },
+      'openclaw-stack': {
+        desc: 'AIニュース自動収集→要約→X投稿パイプライン。ガイドサイト・HTML変換スクリプト含む。',
+        path: '01_DECISIONS/openclaw-stack/',
+        tags: ['自動化', 'X/Twitter', 'Docker']
+      },
+      'Zenn記事': {
+        desc: 'Zenn技術記事の管理・レビュー・Mermaid図変換。公開優先度付きインデックス管理。',
+        path: '01_DECISIONS/zenn/',
+        tags: ['Zenn', 'ブログ', '技術記事']
+      },
+      '💼 キャリア戦略': {
+        desc: 'AI活用エンジニアへの転職戦略。GLM・MiniMax統合判断でフェーズ0追加、タイムライン1〜1.5年。',
+        path: '40_CAREER/',
+        tags: ['キャリア', '転職']
+      },
+      '🛠️ 開発手法': {
+        desc: '新規プロジェクト立ち上げ時の手法セレクタ。TDD/BDD/DDD/仕様駆動/クリーンアーキテクチャから選択。',
+        path: '00_SYSTEM/開発手法カタログ/',
+        tags: ['開発手法', 'TDD', 'DDD']
+      },
+      '自律開発ループ': {
+        desc: 'CronCreateでIssueを自動実装するループ。毎時7分(atelier-kyo)・毎時23分(NexusCore)で自動実行。',
+        path: '00_SYSTEM/共通ルール/自律開発ループ.md',
+        tags: ['Cron', '自動化', 'Issue']
+      },
+      '📚 ガイドサイト': {
+        desc: '公開中のガイドサイト群。ssot-guide(独立)+guides(37冊)。GitHub Pagesで公開。',
+        path: 'https://fukukei23.github.io/guides/',
+        tags: ['GitHub Pages', 'HTML', 'ガイド']
+      },
+      '🌐 インフラ・共通': {
+        desc: 'vault全体の共通ルール・ナレッジ構造・LLMルーティング・日次ログ管理。',
+        path: '00_SYSTEM/共通ルール/',
+        tags: ['共通', 'インフラ']
+      },
+      'LLMルーティング': {
+        desc: 'GLM-5.1(メイン)→MiniMax(フォールバック)→Sonnet(要許可)の優先順位。glm-rate-proxyで自動切替。',
+        path: '00_SYSTEM/共通ルール/LLMルーティング.md',
+        tags: ['GLM', 'MiniMax', 'Sonnet']
+      },
+      'リポジトリ索引（23個）': {
+        desc: '全23リポジトリの概要・関係性・ステータスをYAML+Markdownで管理。週次GitHub Actionsで自動更新。',
+        path: '00_SYSTEM/リポジトリ索引.md',
+        tags: ['GitHub', 'リポジトリ']
+      },
+      '用語集（80+用語）': {
+        desc: '初心者向け80+用語の解説集。専門用語の初出時に参照。',
+        path: '00_SYSTEM/用語集.md',
+        tags: ['用語', 'ドキュメント']
+      },
+    };
+
     const markdown = `
 # SSOT 全体マップ
 
@@ -134,6 +322,33 @@
 - 10_DAILY/（日記ハブ）
 `;
 
+    const tooltip = document.getElementById('tooltip');
+
+    function showTooltip(event, text) {
+      const info = descriptions[text.trim()];
+      if (!info) return;
+
+      const tags = (info.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
+      const pathHtml = info.path ? `<div class="path">📁 ${info.path}</div>` : '';
+
+      tooltip.innerHTML = `<h3>${text.trim()}</h3><p>${info.desc}</p>${tags}${pathHtml}`;
+      tooltip.classList.add('visible');
+      positionTooltip(event);
+    }
+
+    function positionTooltip(event) {
+      const x = event.clientX + 16;
+      const y = event.clientY - 10;
+      const tw = tooltip.offsetWidth;
+      const th = tooltip.offsetHeight;
+      tooltip.style.left = (x + tw > window.innerWidth ? x - tw - 32 : x) + 'px';
+      tooltip.style.top  = (y + th > window.innerHeight ? y - th : y) + 'px';
+    }
+
+    function hideTooltip() {
+      tooltip.classList.remove('visible');
+    }
+
     window.addEventListener('load', async () => {
       const { Transformer } = window.markmap;
       const { Markmap, loadCSS, loadJS } = window.markmap;
@@ -153,8 +368,21 @@
         duration: 400,
       }, root);
 
-      // ウィンドウリサイズ時にフィット
       window.addEventListener('resize', () => mm.fit());
+
+      // クリックイベント：markmapのノードテキストを拾う
+      svg.addEventListener('click', (e) => {
+        const target = e.target.closest('g.markmap-node');
+        if (!target) { hideTooltip(); return; }
+        const textEl = target.querySelector('foreignObject div, text');
+        const text = textEl ? textEl.textContent : '';
+        if (text) showTooltip(e, text);
+      });
+
+      // 背景クリックで閉じる
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('g.markmap-node')) hideTooltip();
+      });
     });
   </script>
 </body>
