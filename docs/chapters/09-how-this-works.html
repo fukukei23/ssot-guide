@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ガイドサイト構築 — SSOT Guide</title>
+    <meta name="description" content="Claude Code CLI ガイドサイト構築の解説 — AIコーディングアシスタント完全ガイド">
+    <meta property="og:title" content="ガイドサイト構築 — SSOT Guide">
+    <meta property="og:description" content="Claude Code CLI ガイドサイト構築の解説">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://fukukei23.github.io/ssot-guide/chapters/09-how-this-works.html">
+    <meta property="og:image" content="https://fukukei23.github.io/ssot-guide/assets/ogp.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+    <header class="site-header">
+        <button class="menu-toggle" aria-label="メニュー" id="menuToggle">
+            <span></span><span></span><span></span>
+        </button>
+        <a href="../index.html" class="site-title">🏛️ SSOT Guide</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="テーマ切替">
+            <span class="icon-light">☀️</span>
+            <span class="icon-dark">🌙</span>
+        </button>
+    </header>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="../index.html">🏠 ホーム</a>
+        </div>
+        
+        <a href="00-overview.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🏛️</span>
+            概要
+        </a>
+        
+        <a href="01-structure.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">📁</span>
+            ディレクトリ設計
+        </a>
+        
+        <a href="02-llm-routing.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">⚡</span>
+            LLMルーティング
+        </a>
+        
+        <a href="03-claude-code.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🤖</span>
+            Claude Code統合
+        </a>
+        
+        <a href="04-autonomous.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🔄</span>
+            自律開発ループ
+        </a>
+        
+        <a href="05-recording.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">📝</span>
+            記録・ドキュメント
+        </a>
+        
+        <a href="06-methods.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🗂️</span>
+            開発手法カタログ
+        </a>
+        
+        <a href="07-career.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">💼</span>
+            キャリア戦略
+        </a>
+        
+        <a href="08-projects.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🚀</span>
+            プロジェクト紹介
+        </a>
+        
+        <a href="09-how-this-works.html"
+           class="sidebar-link active">
+            <span class="sidebar-icon">🔧</span>
+            ガイドサイト構築
+        </a>
+        
+    </nav>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <main class="content">
+        <div class="chapter-nav-top">
+            
+            <a href="08-projects.html" class="nav-prev">← プロジェクト紹介</a>
+            
+            
+        </div>
+
+        <article class="chapter-body">
+            <h1>09 ガイドサイト構築 — このサイトのしくみ</h1>
+<div class="callout callout-info"><p>Markdown → モバイル対応HTMLへの変換パイプラインと品質保証の仕組みを解説する</p></div>
+<hr />
+<h2>アーキテクチャ概要</h2>
+<pre><code>source/*.md          ← 章ごとのMarkdownソース
+    ↓ convert.py
+docs/chapters/*.html ← 生成済みHTML（GitHub Pages公開）
+docs/index.html      ← トップページ
+docs/assets/         ← style.css / script.js
+</code></pre>
+<p><code>convert.py</code> 1ファイルがビルド全体を担当する。外部CMSやSSGに依存せず、Pythonの標準的なライブラリのみで動作する。</p>
+<hr />
+<h2>convert.py の主要関数</h2>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>関数</th>
+<th>役割</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>build_chapter_map()</code></td>
+<td><code>source/</code> をスキャンして章リストを構築（手動定義 + 自動検出）</td>
+</tr>
+<tr>
+<td><code>filter_sections(text)</code></td>
+<td>不要セクション・パーソナル情報を除去</td>
+</tr>
+<tr>
+<td><code>convert_md_to_html(md)</code></td>
+<td>Markdown → HTML（<code>markdown-it-py</code> 使用）</td>
+</tr>
+<tr>
+<td><code>inject_mermaid(html, filename)</code></td>
+<td>Mermaid図を指定位置に挿入</td>
+</tr>
+<tr>
+<td><code>rewrite_links(html, chapter_map)</code></td>
+<td><code>.md</code> リンクを <code>.html</code> に書き換え</td>
+</tr>
+<tr>
+<td><code>enhance_html(html)</code></td>
+<td>テーブルラップ・callout変換などの装飾</td>
+</tr>
+<tr>
+<td><code>main()</code></td>
+<td>全章を変換して <code>docs/</code> に出力</td>
+</tr>
+</tbody>
+</table></div>
+<h3>章の自動検出</h3>
+<p><code>CHAPTER_MAP</code> に登録されていないMarkdownファイルを自動スキャンして追加する。<br />
+フロントマターに <code>title</code> / <code>icon</code> / <code>desc</code> を書くと反映される:</p>
+<pre><code class="language-markdown">---
+title: 新しい章
+icon: 🔧
+desc: この章の説明
+---
+</code></pre>
+<hr />
+<h2>テストスイート</h2>
+<p><code>test_convert.py</code>（9クラス・45テスト）で変換パイプラインを自動検証する。</p>
+<pre><code class="language-bash">python3 -m pytest test_convert.py -v
+</code></pre>
+<h3>テストクラス一覧</h3>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>クラス</th>
+<th>テスト数</th>
+<th>カバー内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TestFilenameToSlug</code></td>
+<td>5</td>
+<td>ファイル名→slug変換（ASCII・日本語・連続ハイフン）</td>
+</tr>
+<tr>
+<td><code>TestExtractFromH1</code></td>
+<td>5</td>
+<td>H1からタイトル・説明を抽出</td>
+</tr>
+<tr>
+<td><code>TestFilterSections</code></td>
+<td>4</td>
+<td>セクション除去・不要テキストの清掃</td>
+</tr>
+<tr>
+<td><code>TestConvertMdToHtml</code></td>
+<td>4</td>
+<td>見出し・コード・テーブル・太字</td>
+</tr>
+<tr>
+<td><code>TestMermaidInjection</code></td>
+<td>3</td>
+<td>図なし・未知ファイル・図あり時</td>
+</tr>
+<tr>
+<td><code>TestRewriteLinks</code></td>
+<td>7</td>
+<td>MD→HTML変換・アンカー・壊れたリンク</td>
+</tr>
+<tr>
+<td><code>TestEnhanceHtml</code></td>
+<td>5</td>
+<td>テーブルラップ・callout 4種</td>
+</tr>
+<tr>
+<td><code>TestBuildChapterMap</code></td>
+<td>4</td>
+<td>自動スキャン・手動定義保持・キー検証</td>
+</tr>
+<tr>
+<td><code>TestBuildIntegrity</code></td>
+<td>8</td>
+<td>ビルド後HTML構造・OGP・壊れたリンクゼロ確認</td>
+</tr>
+</tbody>
+</table></div>
+<h3>新機能を追加する時の手順</h3>
+<ol>
+<li><code>source/</code> に Markdown を書く</li>
+<li><code>convert.py</code> に関数・ロジックを追加</li>
+<li><code>test_convert.py</code> に対応テストを追加</li>
+<li><code>python3 -m pytest test_convert.py -q</code> で確認</li>
+<li><code>python3 convert.py</code> でビルド</li>
+<li><code>git add -A &amp;&amp; git commit &amp;&amp; git push</code></li>
+</ol>
+<hr />
+<h2>GitHub Pages 公開</h2>
+<p>リポジトリの Settings → Pages → Source: <code>main</code> ブランチ <code>/docs</code> フォルダ に設定する。</p>
+<p><code>git push</code> するだけで自動公開される（ビルドはローカルで実行してから push）。</p>
+<p>公開URL: <code>https://&lt;username&gt;.github.io/&lt;repo&gt;/</code></p>
+<hr />
+<h2>CSS変数とテーマ</h2>
+<p><code>docs/assets/style.css</code> はCSS変数でライト/ダークモードを管理する。</p>
+<pre><code class="language-css">:root {
+    --bg: #f0f2ff;
+    --bg-card: #ffffff;
+    --text: #1a1f3a;
+    --accent: #5b4cf5;
+    /* ... */
+}
+
+[data-theme=&quot;dark&quot;] {
+    --bg: #0d0f1e;
+    --text: #e2e8f0;
+    /* ... */
+}
+</code></pre>
+<p><strong>callout系の変数は必ず定義すること</strong>（未定義の場合、ダークモードで視認不能になる）:</p>
+<pre><code class="language-css">/* ライト側でも定義が必要 */
+--callout-info-bg: var(--blue-bg);
+--callout-warn-bg: var(--amber-bg);
+--callout-tip-bg: var(--green-bg);
+--callout-danger-bg: var(--red-bg);
+</code></pre>
+<p>新しいカラー変数を追加する時は <code>:root</code> と <code>[data-theme=&quot;dark&quot;]</code> の<strong>両方</strong>に追加する。</p>
+<hr />
+<h2>Mermaid図の追加</h2>
+<p><code>convert.py</code> の <code>MERMAID_DIAGRAMS</code> に定義する:</p>
+<pre><code class="language-python">MERMAID_DIAGRAMS = {
+    &quot;03_Claude-Code統合.md&quot;: [
+        (&quot;## アーキテクチャ&quot;, &quot;&quot;&quot;
+graph TD
+    A[CLAUDE.md] --&gt; B[Claude Code]
+    B --&gt; C[Hooks]
+    B --&gt; D[Memory]
+&quot;&quot;&quot;),
+    ],
+}
+</code></pre>
+<p>指定した見出しの直前に図が挿入される。</p>
+
+        </article>
+
+        <nav class="chapter-nav-bottom">
+            
+            <a href="08-projects.html" class="nav-card prev">
+                <span class="nav-label">← 前の章</span>
+                <span class="nav-title">🚀 プロジェクト紹介</span>
+            </a>
+            
+            
+        </nav>
+    </main>
+
+    <script src="../assets/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default',
+            themeVariables: { fontSize: '14px' }
+        });
+    </script>
+</body>
+</html>

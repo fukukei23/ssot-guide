@@ -24,6 +24,7 @@ CHAPTER_MAP = {
     "06_開発手法カタログ.md": {"slug": "06-methods", "title": "開発手法カタログ", "icon": "🗂️", "desc": "TDD・BDD・DDD・仕様駆動・クリーンアーキテクチャ"},
     "07_キャリア戦略.md": {"slug": "07-career", "title": "キャリア戦略", "icon": "💼", "desc": "AIネイティブ開発者としての戦略・ポートフォリオ設計"},
     "08_プロジェクト紹介.md": {"slug": "08-projects", "title": "プロジェクト紹介", "icon": "🚀", "desc": "公開リポジトリ一覧・自律開発の実践"},
+    "09_ガイドサイト構築.md": {"slug": "09-how-this-works", "title": "ガイドサイト構築", "icon": "🔧", "desc": "convert.py・テストスイート・GitHub Pages・CSS変数"},
 }
 
 
