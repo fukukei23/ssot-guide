@@ -16,28 +16,28 @@ for arg in "$@"; do
 done
 
 echo "🔄 SSOT → ssot-guide 同期開始 $(date '+%Y-%m-%d %H:%M:%S')"
-[[ "$DRY_RUN" == "true" ]] && echo "   モード: DRY-RUN（変更なし）"
+[[ "$DRY_RUN" == "true" ]] && echo "   モード: DRY-RUN（ファイル書き込みなし）"
 
 # --- 差分チェック ---
 SSOT_HASH=$(git -C "$SSOT_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
 LAST_SYNC_FILE="$HOME/.claude/state/ssot-guide-last-sync"
 LAST_SSOT_HASH=$(cat "$LAST_SYNC_FILE" 2>/dev/null || echo "")
 
+# 本番実行のみスキップ（dry-runは常に続行して何が起きるか見せる）
 if [[ "$SSOT_HASH" == "$LAST_SSOT_HASH" && "$DRY_RUN" == "false" ]]; then
     echo "✅ obsidian-ssot に変更なし（${SSOT_HASH:0:7}）— スキップ"
     exit 0
 fi
 
-echo "📋 変更検出: ${LAST_SSOT_HASH:0:7} → ${SSOT_HASH:0:7}"
+PREV="${LAST_SSOT_HASH:0:7}"
+echo "📋 変更: ${PREV:-なし} → ${SSOT_HASH:0:7}"
 
-# --- リポジトリ索引から公開リポ一覧を抽出して source/08 を更新 ---
+# --- リポジトリ索引から公開リポ一覧テーブルを生成（読み取りのみ）---
 REPO_INDEX="$SSOT_DIR/00_SYSTEM/リポジトリ索引.md"
 SOURCE_08="$GUIDE_DIR/source/08_プロジェクト紹介.md"
 
+REPO_TABLE=""
 if [[ -f "$REPO_INDEX" ]]; then
-    echo "📋 リポジトリ索引を抽出中..."
-
-    # Python でリポジトリ一覧テーブルを生成
     REPO_TABLE=$(python3 - "$REPO_INDEX" <<'PYEOF'
 import sys, re, pathlib
 
@@ -66,36 +66,40 @@ for name, status, desc in repos:
     print(f"| [{name}](https://github.com/fukukei23/{name}) | {icon.get(status,'⚪')} {status} | {desc} |")
 PYEOF
     )
+fi
 
+# --- DRY-RUNはここで終了（ファイルを一切書き換えない）---
+if [[ "$DRY_RUN" == "true" ]]; then
+    echo ""
     if [[ -n "$REPO_TABLE" ]]; then
-        # source/08 の「公開リポジトリ一覧（自動更新）」セクションを置換
-        # セクションが存在しなければ末尾に追加
-        if grep -q "公開リポジトリ一覧（自動更新）" "$SOURCE_08" 2>/dev/null; then
-            python3 - "$SOURCE_08" "$REPO_TABLE" <<'PYEOF'
-import sys, pathlib
+        echo "📋 DRY-RUN: source/08 の更新予定内容（先頭5行）:"
+        echo "$REPO_TABLE" | head -5
+    fi
+    echo ""
+    echo "✅ DRY-RUN完了: ファイルへの書き込みは行いませんでした"
+    exit 0
+fi
+
+# --- ここから実際の変更（dry-runでは絶対に到達しない）---
+
+# source/08 を更新
+if [[ -n "$REPO_TABLE" ]]; then
+    if grep -q "公開リポジトリ一覧（自動更新）" "$SOURCE_08" 2>/dev/null; then
+        python3 - "$SOURCE_08" "$REPO_TABLE" <<'PYEOF'
+import sys, re, pathlib
 
 src = pathlib.Path(sys.argv[1])
 new_table = sys.argv[2]
 text = src.read_text(encoding='utf-8')
-
-# セクション全体を置換
-import re
 pattern = r'## 公開リポジトリ一覧（自動更新）\n\n.*?(?=\n## |\Z)'
 replacement = f'## 公開リポジトリ一覧（自動更新）\n\n{new_table}'
 updated = re.sub(pattern, replacement, text, flags=re.DOTALL)
 src.write_text(updated, encoding='utf-8')
 PYEOF
-        else
-            printf "\n\n## 公開リポジトリ一覧（自動更新）\n\n%s\n" "$REPO_TABLE" >> "$SOURCE_08"
-        fi
-        echo "   ✅ source/08_プロジェクト紹介.md を更新"
+    else
+        printf "\n\n## 公開リポジトリ一覧（自動更新）\n\n%s\n" "$REPO_TABLE" >> "$SOURCE_08"
     fi
-fi
-
-if [[ "$DRY_RUN" == "true" ]]; then
-    echo ""
-    echo "📋 DRY-RUN完了: 実際の変更は行いませんでした"
-    exit 0
+    echo "📋 source/08_プロジェクト紹介.md を更新"
 fi
 
 # --- HTML再生成 ---
