@@ -226,7 +226,10 @@ CHAPTER_TEMPLATE = Template("""\
     </main>
 
     <footer class="site-footer">
-        <p>SSOT Guide — <a href="https://github.com/fukukei23/ssot-guide">GitHub</a></p>
+        <p>SSOT Guide — <a href="https://github.com/fukukei23/ssot-guide">GitHub</a>
+         · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
+         · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
+         · <a href="https://fukukei23.github.io/">fukukei23</a></p>
         <p class="site-version">v{{ version }} · {{ build_date }}</p>
     </footer>
 
@@ -314,7 +317,10 @@ INDEX_TEMPLATE = Template("""\
     </main>
 
     <footer class="site-footer">
-        <p>SSOT Guide — <a href="https://github.com/fukukei23/ssot-guide">GitHub</a></p>
+        <p>SSOT Guide — <a href="https://github.com/fukukei23/ssot-guide">GitHub</a>
+         · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
+         · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
+         · <a href="https://fukukei23.github.io/">fukukei23</a></p>
         <p class="site-version">v{{ version }} · {{ build_date }}</p>
     </footer>
 
