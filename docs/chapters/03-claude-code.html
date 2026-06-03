@@ -333,6 +333,96 @@ SessionStart Hook
   }
 }
 </code></pre>
+<hr />
+<h2>スキル管理体系</h2>
+<p>Claude Codeのスキル（~/.claude/skills/）を管理し、SSOTとの同期を確保する。</p>
+<h3>既存スキル一覧</h3>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>スキル名</th>
+<th>トリガー</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ssot-record</strong></td>
+<td>「記録して」「保存して」等</td>
+<td>SSOTへの記録・振り分けの自動化</td>
+</tr>
+<tr>
+<td><strong>ssot-search</strong></td>
+<td>「SSOTから探して」等</td>
+<td>SSOT内を検索</td>
+</tr>
+<tr>
+<td><strong>ssot-sync</strong></td>
+<td>「SSOT整合性チェックして」「整理して」等</td>
+<td>SSOTと実態の乖離をチェック・修正</td>
+</tr>
+<tr>
+<td><strong>teian</strong></td>
+<td>「提案して」「どう思う」等</td>
+<td>軽量提案（brainstormingへの誘導も）</td>
+</tr>
+<tr>
+<td><strong>record-decision</strong></td>
+<td>「判断を記録して」等</td>
+<td>技術決定の記録</td>
+</tr>
+<tr>
+<td><strong>update-guide</strong></td>
+<td>「/update-guide」</td>
+<td>ガイドサイトの更新キュー処理</td>
+</tr>
+</tbody>
+</table></div>
+<h3>ssot-sync スキル（整合性チェック）</h3>
+<p><strong>トリガーワード</strong>:</p>
+<ul>
+<li>「SSOT整合性チェックして」「SSOT整理して」「SSOT同期して」</li>
+<li>「SSOTのズレを直して」「00_SYSTEM更新して」「乖離を修正して」</li>
+<li><code>/ssot-sync</code></li>
+</ul>
+<p><strong>チェック対象</strong>:</p>
+<ul>
+<li><code>00_SYSTEM/自動化.md</code> — hooks/cron/スクリプトの記載漏れ</li>
+<li><code>00_SYSTEM/repo-index.yaml</code> — リポジトリ数・visibility・last_updated</li>
+<li><code>00_SYSTEM/MCPツール使い分けガイド.md</code> — 有効サーバー数</li>
+<li><code>00_SYSTEM/全体マップ_MOC.md</code> — リポジトリ数・プロジェクト一覧</li>
+<li><code>00_SYSTEM/チャーター.md</code> — 禁止操作リスト</li>
+</ul>
+<h3>スキル追加時のルール</h3>
+<p>新しいスキルを ~/.claude/skills/ に作成した時は:</p>
+<ol>
+<li><strong>01_DECISIONS/claude-code/_INDEX.md</strong> に記録</li>
+<li><strong>ssot-guide</strong> のこのセクションに追記</li>
+<li>自動化関連なら <strong>00_SYSTEM/自動化.md</strong> も更新</li>
+</ol>
+<h3>ssot-record と ssot-sync の使い分け</h3>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>状況</th>
+<th>スキル</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>作業内容を記録したい</td>
+<td><code>ssot-record</code>（「記録して」）</td>
+</tr>
+<tr>
+<td>SSOTの情報が古いか確認したい</td>
+<td><code>ssot-sync</code>（「SSOT整理して」）</td>
+</tr>
+<tr>
+<td>SSOTから情報を探したい</td>
+<td><code>ssot-search</code>（「SSOTから探して」）</td>
+</tr>
+</tbody>
+</table></div>
 
         </article>
 
@@ -357,7 +447,7 @@ SessionStart Hook
          · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
          · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
          · <a href="https://fukukei23.github.io/">fukukei23</a></p>
-        <p class="site-version">v1.137 · 2026.06.03</p>
+        <p class="site-version">v1.138 · 2026.06.03</p>
     </footer>
 
     <script src="../assets/script.js"></script>

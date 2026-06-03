@@ -219,3 +219,50 @@ SessionStart Hook
   }
 }
 ```
+
+---
+
+## スキル管理体系
+
+Claude Codeのスキル（~/.claude/skills/）を管理し、SSOTとの同期を確保する。
+
+### 既存スキル一覧
+
+| スキル名 | トリガー | 用途 |
+|---|---|---|
+| **ssot-record** | 「記録して」「保存して」等 | SSOTへの記録・振り分けの自動化 |
+| **ssot-search** | 「SSOTから探して」等 | SSOT内を検索 |
+| **ssot-sync** | 「SSOT整合性チェックして」「整理して」等 | SSOTと実態の乖離をチェック・修正 |
+| **teian** | 「提案して」「どう思う」等 | 軽量提案（brainstormingへの誘導も） |
+| **record-decision** | 「判断を記録して」等 | 技術決定の記録 |
+| **update-guide** | 「/update-guide」 | ガイドサイトの更新キュー処理 |
+
+### ssot-sync スキル（整合性チェック）
+
+**トリガーワード**:
+- 「SSOT整合性チェックして」「SSOT整理して」「SSOT同期して」
+- 「SSOTのズレを直して」「00_SYSTEM更新して」「乖離を修正して」
+- `/ssot-sync`
+
+**チェック対象**:
+- `00_SYSTEM/自動化.md` — hooks/cron/スクリプトの記載漏れ
+- `00_SYSTEM/repo-index.yaml` — リポジトリ数・visibility・last_updated
+- `00_SYSTEM/MCPツール使い分けガイド.md` — 有効サーバー数
+- `00_SYSTEM/全体マップ_MOC.md` — リポジトリ数・プロジェクト一覧
+- `00_SYSTEM/チャーター.md` — 禁止操作リスト
+
+### スキル追加時のルール
+
+新しいスキルを ~/.claude/skills/ に作成した時は:
+
+1. **01_DECISIONS/claude-code/_INDEX.md** に記録
+2. **ssot-guide** のこのセクションに追記
+3. 自動化関連なら **00_SYSTEM/自動化.md** も更新
+
+### ssot-record と ssot-sync の使い分け
+
+| 状況 | スキル |
+|---|---|
+| 作業内容を記録したい | `ssot-record`（「記録して」） |
+| SSOTの情報が古いか確認したい | `ssot-sync`（「SSOT整理して」） |
+| SSOTから情報を探したい | `ssot-search`（「SSOTから探して」） |
