@@ -129,20 +129,33 @@ Layer 3: ディレクトリ設定
 - 日本語で回答する
 - コードは変更前に既存実装を理解してから変更する
 
-## LLM利用ポリシー
-- デフォルト: Sonnet（バランス型）
-- 大量処理: Haiku に自動委譲
+## LLM利用ポリシー（環境別）
 
-## セキュリティ
-- APIキー値を会話・ファイルに書き込まない
-- 詳細: ~/projects/ssot/security-policy.md
+**WSL CLI版**: `ANTHROPIC_BASE_URL` をglm-rate-proxy（localhost:8787）に向けることでClaude Code CLI自体をGLMで動作させる。MiniMaxはレート制限時のフォールバック先としてプロキシに設定。
 
-## SSOT参照
-- 設計哲学: ~/projects/ssot/00_SYSTEM/チャーター.md
-- ルール: ~/projects/ssot/00_SYSTEM/共通ルール/ルール.md
+**Windows Desktop版**: エンドポイント変更不可のためLLMはSonnet固定。GLM/MiniMaxはMCPサーバー（glm MCP / minimax MCP）経由でSonnetから委譲して使う。
+
+```markdown
+## LLM利用ポリシー（WSL CLI版の例）
+- メインLLM: GLM（glm-rate-proxy経由）
+- フォールバック: MiniMax（レート制限時・ピーク時）
+- Sonnet直接回答: 要ユーザー許可
 </code></pre>
-<h3>プロジェクトCLAUDE.mdに書くべきこと</h3>
-<pre><code class="language-markdown"># プロジェクトA固有設定
+<h2>セキュリティ</h2>
+<ul>
+<li>APIキー値を会話・ファイルに書き込まない</li>
+<li>詳細: ~/projects/ssot/security-policy.md</li>
+</ul>
+<h2>SSOT参照</h2>
+<ul>
+<li>設計哲学: ~/projects/ssot/00_SYSTEM/チャーター.md</li>
+<li>ルール: ~/projects/ssot/00_SYSTEM/共通ルール/ルール.md</li>
+</ul>
+<pre><code>
+### プロジェクトCLAUDE.mdに書くべきこと
+
+```markdown
+# プロジェクトA固有設定
 
 ## 技術スタック
 - Python 3.12 + FastAPI
@@ -447,7 +460,7 @@ SessionStart Hook
          · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
          · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
          · <a href="https://fukukei23.github.io/">fukukei23</a></p>
-        <p class="site-version">v1.228 · 2026.06.06</p>
+        <p class="site-version">v1.229 · 2026.06.06</p>
     </footer>
 
     <script src="../assets/script.js"></script>

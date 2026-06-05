@@ -183,15 +183,17 @@
 </table></div>
 <hr />
 <h2>ローカルプロキシパターン</h2>
-<p>Claude Code から複数のAPIプロバイダーを透過的に切り替えるには：</p>
-<pre><code>Claude Code
+<div class="callout callout-warn"><p><strong>注意: このパターンはWSL CLI版（Claude Code CLI）でのみ有効。</strong> Windows Desktopアプリ版はエンドポイント変更不可のため、GLM/MiniMaxはMCPサーバー経由で委譲する別の方法を使う。</p></div>
+<p>Claude Code CLIから複数のAPIプロバイダーを透過的に切り替えるには：</p>
+<pre><code>Claude Code CLI（WSL）
     ↓ HTTP
-localhost:8787 (ローカルプロキシ)
+localhost:8787 (ローカルプロキシ / glm-rate-proxy)
     ↓
-    ├── 通常時 → APIプロバイダーA
-    ├── ピーク時 → APIプロバイダーB
-    └── エラー時 → フォールバック先
+    ├── 通常時 → ZAI API (GLM-5.1)
+    ├── ピーク時 → MiniMax API
+    └── 429/5xxエラー時 → MiniMax API（フォールバック）
 </code></pre>
+<div class="callout callout-warn"><p><strong>⚠️ 重要な制限</strong>: コンテキストウィンドウが上限に達した場合、Claude Code本体がAPIリクエストを送る前にエラー判定するため、プロキシに届かずフォールバックも発動しない。早めの <code>/compact</code> / <code>/new-session</code> が必要。</p></div>
 <p><strong>実装例（概念）</strong>:</p>
 <pre><code class="language-python"># proxy.py
 import time
@@ -286,7 +288,7 @@ async def route_message(request):
          · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
          · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
          · <a href="https://fukukei23.github.io/">fukukei23</a></p>
-        <p class="site-version">v1.228 · 2026.06.06</p>
+        <p class="site-version">v1.229 · 2026.06.06</p>
     </footer>
 
     <script src="../assets/script.js"></script>
