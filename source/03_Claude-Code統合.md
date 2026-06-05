@@ -33,9 +33,18 @@ Layer 3: ディレクトリ設定
 - 日本語で回答する
 - コードは変更前に既存実装を理解してから変更する
 
-## LLM利用ポリシー
-- デフォルト: Sonnet（バランス型）
-- 大量処理: Haiku に自動委譲
+## LLM利用ポリシー（環境別）
+
+**WSL CLI版**: `ANTHROPIC_BASE_URL` をglm-rate-proxy（localhost:8787）に向けることでClaude Code CLI自体をGLMで動作させる。MiniMaxはレート制限時のフォールバック先としてプロキシに設定。
+
+**Windows Desktop版**: エンドポイント変更不可のためLLMはSonnet固定。GLM/MiniMaxはMCPサーバー（glm MCP / minimax MCP）経由でSonnetから委譲して使う。
+
+```markdown
+## LLM利用ポリシー（WSL CLI版の例）
+- メインLLM: GLM（glm-rate-proxy経由）
+- フォールバック: MiniMax（レート制限時・ピーク時）
+- Sonnet直接回答: 要ユーザー許可
+```
 
 ## セキュリティ
 - APIキー値を会話・ファイルに書き込まない

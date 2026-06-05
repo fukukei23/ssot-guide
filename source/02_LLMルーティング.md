@@ -57,17 +57,21 @@
 
 ## ローカルプロキシパターン
 
-Claude Code から複数のAPIプロバイダーを透過的に切り替えるには：
+> **注意: このパターンはWSL CLI版（Claude Code CLI）でのみ有効。** Windows Desktopアプリ版はエンドポイント変更不可のため、GLM/MiniMaxはMCPサーバー経由で委譲する別の方法を使う。
+
+Claude Code CLIから複数のAPIプロバイダーを透過的に切り替えるには：
 
 ```
-Claude Code
+Claude Code CLI（WSL）
     ↓ HTTP
-localhost:8787 (ローカルプロキシ)
+localhost:8787 (ローカルプロキシ / glm-rate-proxy)
     ↓
-    ├── 通常時 → APIプロバイダーA
-    ├── ピーク時 → APIプロバイダーB
-    └── エラー時 → フォールバック先
+    ├── 通常時 → ZAI API (GLM-5.1)
+    ├── ピーク時 → MiniMax API
+    └── 429/5xxエラー時 → MiniMax API（フォールバック）
 ```
+
+> **⚠️ 重要な制限**: コンテキストウィンドウが上限に達した場合、Claude Code本体がAPIリクエストを送る前にエラー判定するため、プロキシに届かずフォールバックも発動しない。早めの `/compact` / `/new-session` が必要。
 
 **実装例（概念）**:
 ```python
