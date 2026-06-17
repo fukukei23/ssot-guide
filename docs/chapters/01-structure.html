@@ -131,8 +131,15 @@
 ├── 30_RESEARCH/         ← 🔬 外部調査結果
 │   └── llm-models/      ← LLMベンチマーク・料金
 │
-└── 40_CAREER/           ← 💼 キャリア戦略
-    └── 01_ドキュメント/
+├── 40_CAREER/           ← 💼 キャリア戦略
+│   └── 01_ドキュメント/
+│
+├── 50_PROJECTS/         ← 📂 プロジェクト別作業ファイル
+│
+└── 70_PROMPTS/          ← 📝 自分用プロンプト集（music/coding/business）
+    ├── music/           ← 楽曲制作系（make-song/sangoku/cyber-wa）
+    ├── coding/          ← コードレビュー・リファクタ指示
+    └── business/        ← ビジネス・文面テンプレ
 </code></pre>
 <hr />
 <h2>各ディレクトリの責務</h2>
@@ -182,6 +189,14 @@
 <li>LLMモデルのベンチマーク・料金（週次更新）</li>
 <li>特定ライブラリのAPI変更情報</li>
 </ul>
+<h3>70_PROMPTS — 自分用プロンプト集</h3>
+<p><strong>役割</strong>: 生成AIに使い回す定型プロンプトの保管庫（music/coding/business）</p>
+<p><code>01_DECISIONS/</code>（意思決定の<strong>履歴</strong>）と区別:</p>
+<ul>
+<li>履歴 = 過去を振り返る（日付必須・追記のみ）</li>
+<li>プロンプト = 未来の作業で検索して即・使う素材（改良可・日付任意）</li>
+</ul>
+<p>混ぜると両方の検索性が落ちるため分離。</p>
 <hr />
 <h2>ファイル命名規則</h2>
 <div class="table-wrapper"><table>
@@ -260,7 +275,7 @@
          · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
          · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
          · <a href="https://fukukei23.github.io/">fukukei23</a></p>
-        <p class="site-version">v1.786 · 2026.06.18</p>
+        <p class="site-version">v1.787 · 2026.06.18</p>
     </footer>
 
     <script src="../assets/script.js"></script>
