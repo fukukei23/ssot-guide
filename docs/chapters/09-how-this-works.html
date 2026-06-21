@@ -307,6 +307,51 @@ def _build(self):
 <p>新規サイトを立ち上げた時は <code>VERSION</code> ファイルを作成する:</p>
 <pre><code class="language-bash">echo &quot;1.0&quot; &gt; VERSION
 </code></pre>
+<hr />
+<h2>既存ガイドのパイプライン移行</h2>
+<p>手書きHTML単体のガイドを convert.py パイプラインへ移行する手順。<code>guide-builder</code> スキルの新規作成ではなく、<strong>既存公開ガイドの載せ替え</strong>。</p>
+<h3>手順</h3>
+<ol>
+<li>既存ガイド（ssot-guide等）から <code>convert.py</code> / <code>test_convert.py</code> / <code>VERSION</code> / <code>docs/assets/</code> をコピー</li>
+<li><code>CHAPTER_MAP</code> を新ガイドの章構成に書き換え</li>
+<li><code>CHAPTER_TEMPLATE</code> / <code>INDEX_TEMPLATE</code> のサイト名・URL・OGP・favicon・hero・features をガイド向けにカスタマイズ</li>
+<li><code>source/*.md</code> に章Markdownを振り分け（旧HTMLの内容を章ごとに分割）</li>
+<li><code>pytest</code> → <code>convert.py</code> ビルド → GitHub Pages公開</li>
+</ol>
+<h3>よくあるズレと調整</h3>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>ズレ</th>
+<th>調整</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>移行先リポが既に公開済み</td>
+<td><code>git init</code> / <code>gh repo create</code> は不要・push のみ</td>
+</tr>
+<tr>
+<td>コピー元 convert.py が更新されている</td>
+<td>セキュリティ修正（XSS/ReDoS等）取り込み済みか確認</td>
+</tr>
+<tr>
+<td>Pages公開方式の競合</td>
+<td>Actions workflow（<code>path: .</code>）と branch <code>/docs</code> は排他。branch 方式にするなら該当 workflow を削除</td>
+</tr>
+<tr>
+<td>旧URLからの移行</td>
+<td>旧リポの <code>index.html</code> を <code>meta refresh</code> リダイレクトページ化</td>
+</tr>
+</tbody>
+</table></div>
+<h3>テストの修正</h3>
+<p><code>test_convert.py</code> が旧 <code>CHAPTER_MAP</code> の具体ファイル名に依存している場合がある。<code>rewrite_links</code> のアンカー付きリンクテスト等は新 <code>CHAPTER_MAP</code> のファイル名・slug に合わせて書き換える。</p>
+<h3>参考実装</h3>
+<ul>
+<li><strong>ssh-guide</strong>: https://github.com/fukukei23/ssh-guide （手書きHTML → 5章パイプラインへ移行）</li>
+<li>設計・計画・記録: <code>obsidian-ssot/docs/superpowers/{specs,plans}/</code>・<code>01_DECISIONS/claude-code/</code></li>
+</ul>
 
         </article>
 
@@ -326,7 +371,7 @@ def _build(self):
          · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
          · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
          · <a href="https://fukukei23.github.io/">fukukei23</a></p>
-        <p class="site-version">v1.923 · 2026.06.21</p>
+        <p class="site-version">v1.924 · 2026.06.21</p>
     </footer>
 
     <script src="../assets/script.js"></script>
