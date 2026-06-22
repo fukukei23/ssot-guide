@@ -114,7 +114,7 @@
     ↓
 Claude Code 起動（バックグラウンド）
     ↓
-バックログから未実装Issueを選択
+`priority:*` ラベル付きの未着手Issueを選択
     ↓
 実装 → テスト → コミット
     ↓
@@ -137,7 +137,7 @@ Claude Code 起動（バックグラウンド）
 <pre><code class="language-json">{
   &quot;crons&quot;: [{
     &quot;schedule&quot;: &quot;0 * * * *&quot;,
-    &quot;command&quot;: &quot;claude --headless 'gh issue list --label backlog | head -1 | xargs claude --headless'&quot;,
+    &quot;command&quot;: &quot;claude --headless 'gh issue list --label priority:high --state open | head -1 | xargs claude --headless'&quot;,
     &quot;name&quot;: &quot;autonomous-dev-loop&quot;
   }]
 }
@@ -145,6 +145,7 @@ Claude Code 起動（バックグラウンド）
 <hr />
 <h2>バックログ管理</h2>
 <h3>GitHubラベル設計</h3>
+<p>実運用ラベル（atelier-kyo-manager / NexusCore で実証済み・2026-06-22時点）:</p>
 <div class="table-wrapper"><table>
 <thead>
 <tr>
@@ -155,27 +156,44 @@ Claude Code 起動（バックグラウンド）
 </thead>
 <tbody>
 <tr>
-<td><code>backlog</code></td>
-<td>未着手</td>
+<td><code>priority:high</code></td>
+<td>高優先度</td>
+<td>✅ 対象（最優先）</td>
+</tr>
+<tr>
+<td><code>priority:medium</code></td>
+<td>中優先度</td>
 <td>✅ 対象</td>
 </tr>
 <tr>
-<td><code>in-progress</code></td>
-<td>作業中</td>
-<td>❌ スキップ</td>
+<td><code>priority:low</code></td>
+<td>低優先度</td>
+<td>✅ 対象</td>
 </tr>
 <tr>
 <td><code>blocked</code></td>
-<td>外部依存で止まっている</td>
+<td>外部ブロック中（ユーザー作業待ち等）</td>
 <td>❌ スキップ</td>
 </tr>
 <tr>
-<td><code>tier-1</code></td>
-<td>認証・決済等の重要変更</td>
-<td>❌ 要人間確認</td>
+<td><code>phase:phase0/1/2</code></td>
+<td>基盤整備 / MVP構築 / 運用効率化</td>
+<td>補助（フィルタ用）</td>
+</tr>
+<tr>
+<td><code>type:infra/docs/feature/test</code></td>
+<td>変更種別</td>
+<td>補助（フィルタ用）</td>
+</tr>
+<tr>
+<td><code>sprint:*</code></td>
+<td>スプリント番号</td>
+<td>補助（フィルタ用）</td>
 </tr>
 </tbody>
 </table></div>
+<div class="callout callout-info"><p><strong>作業中状態の管理</strong>: GitHub の <code>in-progress</code> ラベルは採用せず、dev-cycle の <code>state.json.current</code> で管理する（セッションを跨ぐ際の重複実装防止）。</p>
+<p><strong>Tier-1 相当の扱い</strong>: <code>tier-1</code> ラベルは採用せず、認証・決済・本番DB操作等の危険コマンドは PreToolUse hook のキーワード検知で強制ブロックする（詳細は「自律ループの安全ガード」セクション）。</p></div>
 <h3>Issueの書き方（自律実装対応）</h3>
 <p>自律実装されやすいIssueの書き方：</p>
 <pre><code class="language-markdown">## タスク
@@ -201,8 +219,8 @@ Claude Code 起動（バックグラウンド）
 <pre><code class="language-markdown">## 自律開発ループ設定
 
 ### 実装対象
-- `backlog` ラベルのIssueのみ
-- `tier-1` ラベルは絶対に自律実装しない
+- `priority:high/medium/low` ラベルのIssueのみ（high → medium → low の順）
+- Tier-1 キーワード検知（PreToolUse hook）で認証・決済・本番DB操作を強制ブロック
 
 ### 実装方針
 - 1セッション1Issue（複数実装しない）
@@ -299,7 +317,7 @@ powershell.exe -Command &quot;
          · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
          · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
          · <a href="https://fukukei23.github.io/">fukukei23</a></p>
-        <p class="site-version">v1.1009 · 2026.06.22</p>
+        <p class="site-version">v1.1010 · 2026.06.22</p>
     </footer>
 
     <script src="../assets/script.js"></script>
