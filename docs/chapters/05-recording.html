@@ -288,6 +288,57 @@ SSOT ファイル作成 → _INDEX.md 追記 → 日記追記
 | AI開発の知識管理 | Zenn | 公開済 | https://... |
 | LLMルーティング設計 | note | 下書き | - |
 </code></pre>
+<hr />
+<h2>並行セッション運用（タスク占有ボード）</h2>
+<p>複数ウィンドウで Claude Code セッションを並行稼働する際、handoff「次タスク候補」と SessionStart バックログ通知が全セッション共通で出るため、別窓が着手済みのタスクに重複着手する問題を防ぐ仕組み。</p>
+<h3>仕組み（<code>active-sessions.md</code> 拡張）</h3>
+<p><code>00_SYSTEM/active-sessions.md</code> は元来「共通ファイル競合回避ボード」だったが、冒頭に <strong>🟢進行中タスク</strong> セクションを新設し「タスク占有ボード」を兼ねる。</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>要素</th>
+<th>役割</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🟢進行中タスク表</td>
+<td>タスク占有の唯一の真実（タスク名・窓・開始・方針）</td>
+</tr>
+<tr>
+<td>resume-session</td>
+<td>タスク選択時に CC が自動で🟢表へ追加 → 即push</td>
+</tr>
+<tr>
+<td>new-session</td>
+<td>✅で占有解放（タスクはバックログに戻り候補復活）</td>
+</tr>
+<tr>
+<td>SessionStart hook</td>
+<td>🟢進行中タスク一覧を冒頭表示</td>
+</tr>
+<tr>
+<td>CLAUDE.md</td>
+<td>着手前 soft警告ルール（ブロックせずユーザー判断）</td>
+</tr>
+</tbody>
+</table></div>
+<h3>ライフサイクル</h3>
+<pre><code>開始(resume): タスク選択 → CC自動🟢追加 → 即push
+   ↓
+進行(他窓): SessionStartに🟢一覧表示 → 着手前 soft警告
+   ↓
+終了(new): ✅で占有解放 → handoffに前回占有タスク記録
+   ↓
+復帰(resume): 「続きやる？」で再🟢 or 解放
+</code></pre>
+<h3>設計判断</h3>
+<ul>
+<li><strong>soft警告（強制ブロックなし）</strong>: 人間が判断</li>
+<li><strong>宣言の手間ゼロ</strong>: タスク選択の瞬間に CC が自動で🟢追加</li>
+<li><strong>原則解放＋復帰時再宣言</strong>: セッション閉じたら占有解放で枯死ロック回避</li>
+</ul>
+<p>詳細: <code>docs/superpowers/specs/2026-06-23-task-occupancy-board-design.md</code></p>
 
         </article>
 
@@ -312,7 +363,7 @@ SSOT ファイル作成 → _INDEX.md 追記 → 日記追記
          · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
          · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
          · <a href="https://fukukei23.github.io/">fukukei23</a></p>
-        <p class="site-version">v1.1054 · 2026.06.23</p>
+        <p class="site-version">v1.1055 · 2026.06.23</p>
     </footer>
 
     <script src="../assets/script.js"></script>
