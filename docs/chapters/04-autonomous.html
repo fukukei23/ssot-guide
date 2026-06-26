@@ -105,194 +105,64 @@
         </div>
 
         <article class="chapter-body">
-            <h1>04 自律開発ループ — Cron連動の自律実装システム</h1>
-<div class="callout callout-info"><p>Claude Codeをスケジュール実行してIssueを自動実装する仕組み</p></div>
+            <h1>04 自律開発ループ — SSOT連動の自律実装</h1>
+<div class="callout callout-info"><p>SSOTとClaude Codeを組み合わせて、タスクを「発見→承認→実装→検証」で自律的に回す仕組みの位置づけ</p></div>
 <hr />
 <h2>自律開発ループとは</h2>
-<p><strong>自律開発ループ</strong>は、Claude CodeをCronで定期起動し、GitHubのIssueを自動的に実装・テスト・コミットする仕組みです。</p>
-<pre><code>Cron (例: 毎時0分)
-    ↓
-Claude Code 起動（バックグラウンド）
-    ↓
-`priority:*` ラベル付きの未着手Issueを選択
-    ↓
-実装 → テスト → コミット
-    ↓
-完了通知 → 終了
+<p><strong>自律開発ループ</strong>は、Claude Codeをスケジュール実行し、SSOTのバックログと決定ログから自動でタスクを拾い上げ、人間承認を挟んで実装・検証まで進める仕組みです。</p>
+<pre><code>[SSOTバックログ + handoff + 進行中タスク]
+        ↓ 毎朝自動収集
+today-tasks.md（候補リスト）
+        ↓ 人間が選択
+承認 → 実装（git commitまで）
+        ↓ 別プロセスで検証
+verify-result.txt → OKなら次タスク / NGなら停止
 </code></pre>
+<p>SSOTと組み合わせる価値：</p>
+<ul>
+<li><strong>判断の文脈が残る</strong>: 過去の決定ログ（<code>01_DECISIONS/</code>）を自動収集するため、AIが「なぜそうしたか」を保ったまま動ける</li>
+<li><strong>バックログ鮮度が保たれる</strong>: Daily Triageが毎朝走り、完了済みタスクの残留・重複着手を早期発見</li>
+<li><strong>人間承認が必ず入る</strong>: 自動連鎖の中で「OK/NG判定」と「次タスク選択」のみ人間がゲートkeeper</li>
+</ul>
 <hr />
-<h2>前提条件</h2>
-<ol>
-<li>Claude Codeがヘッドレス実行できる環境</li>
-<li>GitHubのIssueにラベル管理されたバックログ</li>
-<li>テストスイートが整備されている</li>
-<li><code>CLAUDE.md</code>に自律実行時のルールが記載されている</li>
-</ol>
-<hr />
-<h2>CronCreate設定</h2>
-<p>Claude Code内から直接Cron設定が可能（<code>durable:false</code>で一時的に設定）：</p>
-<pre><code>/loop 60m &quot;バックログから未実装Issueを1件選んで実装してください&quot;
-</code></pre>
-<p>または settings.json の <code>CronCreate</code> hook で永続設定：</p>
-<pre><code class="language-json">{
-  &quot;crons&quot;: [{
-    &quot;schedule&quot;: &quot;0 * * * *&quot;,
-    &quot;command&quot;: &quot;claude --headless 'gh issue list --label priority:high --state open | head -1 | xargs claude --headless'&quot;,
-    &quot;name&quot;: &quot;autonomous-dev-loop&quot;
-  }]
-}
-</code></pre>
-<hr />
-<h2>バックログ管理</h2>
-<h3>GitHubラベル設計</h3>
-<p>実運用ラベル（atelier-kyo-manager / NexusCore で実証済み・2026-06-22時点）:</p>
+<h2>SSOT観点での設計ポイント</h2>
 <div class="table-wrapper"><table>
 <thead>
 <tr>
-<th>ラベル</th>
-<th>意味</th>
-<th>自律実装</th>
+<th>要素</th>
+<th>役割</th>
+<th>SSOTでの置き場所</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>priority:high</code></td>
-<td>高優先度</td>
-<td>✅ 対象（最優先）</td>
+<td>Daily Triage（毎朝の候補生成）</td>
+<td>バックログ+handoff+進行中の自動収集</td>
+<td>Cron + <code>today-tasks.md</code>（<code>00_SYSTEM/state/</code>）</td>
 </tr>
 <tr>
-<td><code>priority:medium</code></td>
-<td>中優先度</td>
-<td>✅ 対象</td>
+<td>人間承認ゲート</td>
+<td>誤実装・暴走の防止</td>
+<td><code>approve.py</code>（手動実行）</td>
 </tr>
 <tr>
-<td><code>priority:low</code></td>
-<td>低優先度</td>
-<td>✅ 対象</td>
+<td>実装と検証の分離</td>
+<td>自己判定の偏り排除</td>
+<td><code>run-task.sh</code> が2プロセス起動</td>
 </tr>
 <tr>
-<td><code>blocked</code></td>
-<td>外部ブロック中（ユーザー作業待ち等）</td>
-<td>❌ スキップ</td>
-</tr>
-<tr>
-<td><code>phase:phase0/1/2</code></td>
-<td>基盤整備 / MVP構築 / 運用効率化</td>
-<td>補助（フィルタ用）</td>
-</tr>
-<tr>
-<td><code>type:infra/docs/feature/test</code></td>
-<td>変更種別</td>
-<td>補助（フィルタ用）</td>
-</tr>
-<tr>
-<td><code>sprint:*</code></td>
-<td>スプリント番号</td>
-<td>補助（フィルタ用）</td>
+<td>完了通知</td>
+<td>長時間タスクの終了検知</td>
+<td>Stop hook + Discord webhook</td>
 </tr>
 </tbody>
 </table></div>
-<div class="callout callout-info"><p><strong>作業中状態の管理</strong>: GitHub の <code>in-progress</code> ラベルは採用せず、dev-cycle の <code>state.json.current</code> で管理する（セッションを跨ぐ際の重複実装防止）。</p>
-<p><strong>Tier-1 相当の扱い</strong>: <code>tier-1</code> ラベルは採用せず、認証・決済・本番DB操作等の危険コマンドは PreToolUse hook のキーワード検知で強制ブロックする（詳細は「自律ループの安全ガード」セクション）。</p></div>
-<h3>Issueの書き方（自律実装対応）</h3>
-<p>自律実装されやすいIssueの書き方：</p>
-<pre><code class="language-markdown">## タスク
-`src/utils/validate.py` の `validate_email()` 関数にRFCチェックを追加する
-
-## 完了条件
-- [ ] RFC 5322に準拠したメール形式をバリデーション
-- [ ] 既存テスト `test_validate.py` がすべてパス
-- [ ] 新しいテストケースを3件以上追加
-
-## 参考
-- 現在のコード: src/utils/validate.py:42
-- テスト: tests/test_validate.py
-</code></pre>
-<p><strong>ポイント</strong>:</p>
-<ul>
-<li>変更ファイルとその行番号を明示</li>
-<li>完了条件をチェックボックスで記載</li>
-<li>テストへの参照を含める</li>
-</ul>
 <hr />
-<h2>CLAUDE.mdへの自律開発ルール追加</h2>
-<pre><code class="language-markdown">## 自律開発ループ設定
-
-### 実装対象
-- `priority:high/medium/low` ラベルのIssueのみ（high → medium → low の順）
-- Tier-1 キーワード検知（PreToolUse hook）で認証・決済・本番DB操作を強制ブロック
-
-### 実装方針
-- 1セッション1Issue（複数実装しない）
-- テストが通らなければコミットしない
-- 実装内容が曖昧な場合はIssueにコメントして終了
-
-### コミット規則
-- メッセージ: `feat: &lt;Issue番号&gt; &lt;概要&gt;`
-- 完了時: Issueをクローズ
-</code></pre>
-<hr />
-<h2>SSOT自動記録（git hook連動）</h2>
-<p>コミット時にSSOTの記録を自動で促す仕組み：</p>
-<pre><code class="language-bash">#!/bin/bash
-# .git/hooks/post-commit
-
-# コミットメッセージを取得
-MSG=$(git log -1 --pretty=%B)
-
-# Claude Codeに向けてシグナルを出力
-echo &quot;[SSOT-RECORD-TRIGGER]&quot;
-echo &quot;Project: $(basename $(git rev-parse --show-toplevel))&quot;
-echo &quot;Commit: $MSG&quot;
-</code></pre>
-<p><code>CLAUDE.md</code> での設定：</p>
-<pre><code class="language-markdown">## SSOT自動記録（git commit連動）
-Bashツール実行結果に `[SSOT-RECORD-TRIGGER]` が含まれていたら、
-record-decision スキルを自動実行する。
-</code></pre>
-<hr />
-<h2>完了通知システム</h2>
-<p>長時間タスク終了時に通知を送る：</p>
-<h3>Windowsトースト通知（WSL2環境）</h3>
-<pre><code class="language-bash">#!/bin/bash
-# notify-done.sh
-
-MESSAGE=&quot;${1:-タスクが完了しました}&quot;
-
-# PowerShell経由でトースト通知
-powershell.exe -Command &quot;
-[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
-\$template = [Windows.UI.Notifications.ToastTemplateType]::ToastText01
-\$xml = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent(\$template)
-\$xml.GetElementsByTagName('text')[0].AppendChild(\$xml.CreateTextNode('$MESSAGE')) | Out-Null
-\$toast = [Windows.UI.Notifications.ToastNotification]::new(\$xml)
-[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('Claude Code').Show(\$toast)
-&quot;
-</code></pre>
-<h3>Stop Hookと組み合わせる</h3>
-<pre><code class="language-json">{
-  &quot;hooks&quot;: {
-    &quot;Stop&quot;: [{
-      &quot;type&quot;: &quot;command&quot;,
-      &quot;command&quot;: &quot;~/.claude/scripts/notify-done.sh '作業が完了しました'&quot;
-    }]
-  }
-}
-</code></pre>
-<hr />
-<h2>自律ループの安全ガード</h2>
-<p>自律実行中の暴走を防ぐための設定：</p>
-<ol>
-<li><strong>Tier 1キーワード検知</strong>: 認証・決済・本番DB操作は自動停止</li>
-<li><strong>テスト失敗時の停止</strong>: テストが通らなければコミットしない</li>
-<li><strong>実行時間上限</strong>: タイムアウト設定（例: 30分）</li>
-<li><strong>変更ファイル数制限</strong>: 1セッションで変更するファイルは最大10件まで</li>
-</ol>
-<pre><code class="language-markdown">## CLAUDE.md の安全ガード設定
-- Tier 1 キーワード検知時: 即停止・Issueにコメント
-- テスト失敗: コミットせずに停止
-- タイムアウト: 30分でセッション終了
-</code></pre>
+<h2>詳細な実装・運用・トラブルシュート</h2>
+<p>本ガイドは <strong>SSOTとの連動と位置づけ</strong> に焦点を絞っています。</p>
+<p>具体的な手順（フェーズ構成・state.json設計・Cron登録・緊急停止・LLM割り当てなど）は、CC側の詳細ガイドを参照してください：</p>
+<p><strong>📖 <a href="#">claude-code-guide 12_dev-cycle</a></strong> — コード品質改善サイクル 5フェーズ（Daily Triage メタループ含む）</p>
+<div class="callout callout-info"><p><strong>注</strong>: 旧来の「GitHub Issue一括自動実装（<code>start.sh --auto</code>）」方式は廃止済みです。現在の正典は <strong>Daily Triage メタループ</strong>（人間承認ゲート付き）です。</p></div>
 
         </article>
 
@@ -317,7 +187,7 @@ powershell.exe -Command &quot;
          · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
          · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
          · <a href="https://fukukei23.github.io/">fukukei23</a></p>
-        <p class="site-version">v1.1230 · 2026.06.26</p>
+        <p class="site-version">v1.1231 · 2026.06.26</p>
     </footer>
 
     <script src="../assets/script.js"></script>
