@@ -511,6 +511,19 @@ a:hover { text-decoration: underline; }
     line-height: 1.7;
 }
 
+/* Chapter category */
+.chapter-category {
+    margin-bottom: 36px;
+}
+.chapter-category-heading {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
 /* Chapter grid */
 .chapter-grid {
     display: grid;

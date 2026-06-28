@@ -29,79 +29,105 @@
             <p>AIと人間が協働するための<br>Single Source of Truth 設計・運用ガイド</p>
         </section>
 
-        <section class="chapter-grid">
-            
-            <a href="chapters/00-overview.html" class="chapter-card">
-                <div class="card-icon">🏛️</div>
-                <div class="card-number">第00章</div>
-                <h2 class="card-title">概要</h2>
-                <p class="card-desc">SSOTとは・設計の3原則・全体アーキテクチャ</p>
-            </a>
-            
-            <a href="chapters/01-structure.html" class="chapter-card">
-                <div class="card-icon">📁</div>
-                <div class="card-number">第01章</div>
-                <h2 class="card-title">ディレクトリ設計</h2>
-                <p class="card-desc">vault階層構造と責務分離・MOC・チャーター</p>
-            </a>
-            
-            <a href="chapters/02-llm-routing.html" class="chapter-card">
-                <div class="card-icon">⚡</div>
-                <div class="card-number">第02章</div>
-                <h2 class="card-title">LLMルーティング</h2>
-                <p class="card-desc">複数LLMの使い分け設計・ローカルプロキシパターン</p>
-            </a>
-            
-            <a href="chapters/03-claude-code.html" class="chapter-card">
-                <div class="card-icon">🤖</div>
-                <div class="card-number">第03章</div>
-                <h2 class="card-title">Claude Code統合</h2>
-                <p class="card-desc">CLAUDE.md・Hooks・Memoryシステム設計</p>
-            </a>
-            
-            <a href="chapters/04-autonomous.html" class="chapter-card">
-                <div class="card-icon">🔄</div>
-                <div class="card-number">第04章</div>
-                <h2 class="card-title">自律開発ループ</h2>
-                <p class="card-desc">Cron連動の自律実装・完了通知・安全ガード</p>
-            </a>
-            
-            <a href="chapters/05-recording.html" class="chapter-card">
-                <div class="card-icon">📝</div>
-                <div class="card-number">第05章</div>
-                <h2 class="card-title">記録・ドキュメント</h2>
-                <p class="card-desc">決定ログ・日記・MOC・ハンドオフ文書</p>
-            </a>
-            
-            <a href="chapters/06-methods.html" class="chapter-card">
-                <div class="card-icon">🗂️</div>
-                <div class="card-number">第06章</div>
-                <h2 class="card-title">開発手法カタログ</h2>
-                <p class="card-desc">TDD・BDD・DDD・仕様駆動・クリーンアーキテクチャ</p>
-            </a>
-            
-            <a href="chapters/07-career.html" class="chapter-card">
-                <div class="card-icon">💼</div>
-                <div class="card-number">第07章</div>
-                <h2 class="card-title">キャリア戦略</h2>
-                <p class="card-desc">AIネイティブ開発者としての戦略・ポートフォリオ設計</p>
-            </a>
-            
-            <a href="chapters/08-projects.html" class="chapter-card">
-                <div class="card-icon">🚀</div>
-                <div class="card-number">第08章</div>
-                <h2 class="card-title">プロジェクト紹介</h2>
-                <p class="card-desc">公開リポジトリ一覧・自律開発の実践</p>
-            </a>
-            
-            <a href="chapters/09-how-this-works.html" class="chapter-card">
-                <div class="card-icon">🔧</div>
-                <div class="card-number">第09章</div>
-                <h2 class="card-title">ガイドサイト構築</h2>
-                <p class="card-desc">convert.py・テストスイート・GitHub Pages・CSS変数</p>
-            </a>
-            
+        
+        <section class="chapter-category">
+            <h2 class="chapter-category-heading">🏛️ 基礎・設計</h2>
+            <div class="chapter-grid">
+                
+                <a href="chapters/00-overview.html" class="chapter-card">
+                    <div class="card-icon">🏛️</div>
+                    <div class="card-number">第00章</div>
+                    <h2 class="card-title">概要</h2>
+                    <p class="card-desc">SSOTとは・設計の3原則・全体アーキテクチャ</p>
+                </a>
+                
+                <a href="chapters/01-structure.html" class="chapter-card">
+                    <div class="card-icon">📁</div>
+                    <div class="card-number">第01章</div>
+                    <h2 class="card-title">ディレクトリ設計</h2>
+                    <p class="card-desc">vault階層構造と責務分離・MOC・チャーター</p>
+                </a>
+                
+            </div>
         </section>
+        
+        <section class="chapter-category">
+            <h2 class="chapter-category-heading">🤖 運用・自動化</h2>
+            <div class="chapter-grid">
+                
+                <a href="chapters/02-llm-routing.html" class="chapter-card">
+                    <div class="card-icon">⚡</div>
+                    <div class="card-number">第02章</div>
+                    <h2 class="card-title">LLMルーティング</h2>
+                    <p class="card-desc">複数LLMの使い分け設計・ローカルプロキシパターン</p>
+                </a>
+                
+                <a href="chapters/03-claude-code.html" class="chapter-card">
+                    <div class="card-icon">🤖</div>
+                    <div class="card-number">第03章</div>
+                    <h2 class="card-title">Claude Code統合</h2>
+                    <p class="card-desc">CLAUDE.md・Hooks・Memoryシステム設計</p>
+                </a>
+                
+                <a href="chapters/04-autonomous.html" class="chapter-card">
+                    <div class="card-icon">🔄</div>
+                    <div class="card-number">第04章</div>
+                    <h2 class="card-title">自律開発ループ</h2>
+                    <p class="card-desc">Cron連動の自律実装・完了通知・安全ガード</p>
+                </a>
+                
+                <a href="chapters/05-recording.html" class="chapter-card">
+                    <div class="card-icon">📝</div>
+                    <div class="card-number">第05章</div>
+                    <h2 class="card-title">記録・ドキュメント</h2>
+                    <p class="card-desc">決定ログ・日記・MOC・ハンドオフ文書</p>
+                </a>
+                
+            </div>
+        </section>
+        
+        <section class="chapter-category">
+            <h2 class="chapter-category-heading">📚 知見・キャリア</h2>
+            <div class="chapter-grid">
+                
+                <a href="chapters/06-methods.html" class="chapter-card">
+                    <div class="card-icon">🗂️</div>
+                    <div class="card-number">第06章</div>
+                    <h2 class="card-title">開発手法カタログ</h2>
+                    <p class="card-desc">TDD・BDD・DDD・仕様駆動・クリーンアーキテクチャ</p>
+                </a>
+                
+                <a href="chapters/07-career.html" class="chapter-card">
+                    <div class="card-icon">💼</div>
+                    <div class="card-number">第07章</div>
+                    <h2 class="card-title">キャリア戦略</h2>
+                    <p class="card-desc">AIネイティブ開発者としての戦略・ポートフォリオ設計</p>
+                </a>
+                
+                <a href="chapters/08-projects.html" class="chapter-card">
+                    <div class="card-icon">🚀</div>
+                    <div class="card-number">第08章</div>
+                    <h2 class="card-title">プロジェクト紹介</h2>
+                    <p class="card-desc">公開リポジトリ一覧・自律開発の実践</p>
+                </a>
+                
+            </div>
+        </section>
+        
+        <section class="chapter-category">
+            <h2 class="chapter-category-heading">🔧 メタ</h2>
+            <div class="chapter-grid">
+                
+                <a href="chapters/09-how-this-works.html" class="chapter-card">
+                    <div class="card-icon">🔧</div>
+                    <div class="card-number">第09章</div>
+                    <h2 class="card-title">ガイドサイト構築</h2>
+                    <p class="card-desc">convert.py・テストスイート・GitHub Pages・CSS変数</p>
+                </a>
+                
+            </div>
+        </section>
+        
 
         <section class="features">
             <h2>📖 このガイドの特徴</h2>
@@ -135,7 +161,7 @@
          · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
          · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
          · <a href="https://fukukei23.github.io/">fukukei23</a></p>
-        <p class="site-version">v1.1330 · 2026.06.28</p>
+        <p class="site-version">v1.1332 · 2026.06.28</p>
     </footer>
 
     <script src="assets/script.js"></script>

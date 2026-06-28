@@ -278,16 +278,21 @@ INDEX_TEMPLATE = Template("""\
             <p>AIと人間が協働するための<br>Single Source of Truth 設計・運用ガイド</p>
         </section>
 
-        <section class="chapter-grid">
-            {% for ch in chapters %}
-            <a href="chapters/{{ ch.slug }}.html" class="chapter-card">
-                <div class="card-icon">{{ ch.icon }}</div>
-                <div class="card-number">第{{ ch.number }}章</div>
-                <h2 class="card-title">{{ ch.title }}</h2>
-                <p class="card-desc">{{ ch.desc }}</p>
-            </a>
-            {% endfor %}
+        {% for cat in categories %}
+        <section class="chapter-category">
+            <h2 class="chapter-category-heading">{{ cat.name }}</h2>
+            <div class="chapter-grid">
+                {% for ch in cat.chapters %}
+                <a href="chapters/{{ ch.slug }}.html" class="chapter-card">
+                    <div class="card-icon">{{ ch.icon }}</div>
+                    <div class="card-number">第{{ ch.number }}章</div>
+                    <h2 class="card-title">{{ ch.title }}</h2>
+                    <p class="card-desc">{{ ch.desc }}</p>
+                </a>
+                {% endfor %}
+            </div>
         </section>
+        {% endfor %}
 
         <section class="features">
             <h2>📖 このガイドの特徴</h2>
@@ -482,6 +487,38 @@ def enhance_html(html: str) -> str:
     return html
 
 
+# --- トップページのカテゴリ分け ---
+
+# 章番号→カテゴリの境界（番号レンジは閉区間）
+INDEX_CATEGORIES = [
+    ("🏛️ 基礎・設計", 0, 1),
+    ("🤖 運用・自動化", 2, 5),
+    ("📚 知見・キャリア", 6, 8),
+    ("🔧 メタ", 9, 9),
+]
+INDEX_CATEGORY_FALLBACK = "📚 その他"
+
+
+def group_chapters_by_category(chapters: list) -> list:
+    """章番号レンジに基づき、トップページ表示用にカテゴリへグルーピング."""
+    buckets = {name: [] for name, _, _ in INDEX_CATEGORIES}
+    buckets[INDEX_CATEGORY_FALLBACK] = []
+
+    for ch in chapters:
+        number = ch["number"]
+        category_name = INDEX_CATEGORY_FALLBACK
+        if number.isdigit():
+            n = int(number)
+            for name, lo, hi in INDEX_CATEGORIES:
+                if lo <= n <= hi:
+                    category_name = name
+                    break
+        buckets[category_name].append(ch)
+
+    ordered_names = [name for name, _, _ in INDEX_CATEGORIES] + [INDEX_CATEGORY_FALLBACK]
+    return [{"name": name, "chapters": buckets[name]} for name in ordered_names if buckets[name]]
+
+
 # --- メイン ---
 
 def main():
@@ -541,8 +578,9 @@ def main():
         out.write_text(full_html, encoding="utf-8")
         print(f"OK: {ch['slug']}.html")
 
-    # index.html 生成
-    index_html = INDEX_TEMPLATE.render(chapters=chapters, version=version, build_date=build_date)
+    # index.html 生成（カテゴリ分けして表示）
+    categories = group_chapters_by_category(chapters)
+    index_html = INDEX_TEMPLATE.render(categories=categories, version=version, build_date=build_date)
     (OUTPUT_DIR / "index.html").write_text(index_html, encoding="utf-8")
     print("OK: index.html")
 
