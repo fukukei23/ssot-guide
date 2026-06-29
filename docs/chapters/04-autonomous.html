@@ -163,6 +163,22 @@ verify-result.txt → OKなら次タスク / NGなら停止
 <p>具体的な手順（フェーズ構成・state.json設計・Cron登録・緊急停止・LLM割り当てなど）は、CC側の詳細ガイドを参照してください：</p>
 <p><strong>📖 <a href="#">claude-code-guide 12_dev-cycle</a></strong> — コード品質改善サイクル 5フェーズ（Daily Triage メタループ含む）</p>
 <div class="callout callout-info"><p><strong>注</strong>: 旧来の「GitHub Issue一括自動実装（<code>start.sh --auto</code>）」方式は廃止済みです。現在の正典は <strong>Daily Triage メタループ</strong>（人間承認ゲート付き）です。</p></div>
+<hr />
+<h2>OSS Issue自律ループ（Phase4・完成）</h2>
+<p>Daily Triage メタループは2つのタスク供給源を持ちます。<strong>バックログ/handoff</strong>（manual モード）に加え、<strong>GitHub Issue</strong>（auto モード）からの自律供給も復活済みです。</p>
+<pre><code>[GitHub Issue: auto-loop ラベル付き]
+        ↓ fetch_issues.py が gh CLI で取得
+state.json pending へ積込
+        ↓ next_issue.py が auto モード時に枯渇補充
+run-task.sh → 検証 → 次タスク（max=3上限で連続実行）
+</code></pre>
+<ul>
+<li><strong>ハイブリッド承認ゲート</strong>: <code>set-mode.sh</code> で <code>manual</code>（人間がapprove.pyで選択）と <code>auto</code>（Issue枯渇で自動補充）を切替</li>
+<li><strong>安全装置</strong>: <code>max_tasks_per_session=3</code> 上限 / verify NG 即停止 / 0件停止 / gh失敗停止</li>
+<li><strong>単一ラベル <code>auto-loop</code></strong>: 対象repo（設定ファイル <code>auto-loop-config.yaml</code>）のIssueのみ選別</li>
+<li><strong>完成度</strong>: コード完成＋E2E検証完了（launch直前まで実機確認）。実運用は対象repoに <code>auto-loop</code> ラベル付きIssue作成 → <code>set-mode.sh auto</code> で即時稼働</li>
+</ul>
+<div class="callout callout-info"><p><strong>Loop Engineering 全体</strong>: Phase1（Triage基盤）→ Phase2（承認ゲート）→ Phase3（自律連鎖）→ Phase3.1（運用改善）→ Phase4-A（cron永続化）→ Phase4（OSS Issue復活）まで完了。MVP完成・実運用待ち。</p></div>
 
         </article>
 
@@ -187,7 +203,7 @@ verify-result.txt → OKなら次タスク / NGなら停止
          · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
          · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
          · <a href="https://fukukei23.github.io/">fukukei23</a></p>
-        <p class="site-version">v1.1384 · 2026.06.29</p>
+        <p class="site-version">v1.1385 · 2026.06.29</p>
     </footer>
 
     <script src="../assets/script.js"></script>
