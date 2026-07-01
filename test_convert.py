@@ -19,6 +19,7 @@ from convert import (
     convert_md_to_html,
     enhance_html,
     filter_sections,
+    group_chapters_by_category,
     inject_mermaid,
     rewrite_links,
 )
@@ -171,8 +172,11 @@ class TestTemplateAutoEscape:
         assert "<p>OK</p>" in out  # content|safe で本文HTMLは保持
 
     def test_index_template_escapes_desc(self):
+        # INDEX_TEMPLATE は categories(group_chapters_by_category の結果)を受け取る
+        # (convert.py:583 の実使用署名に合わせる。chapters 直渡しでは描画されない)
+        categories = group_chapters_by_category(self._chapter_payload()["chapters"])
         out = INDEX_TEMPLATE.render(
-            chapters=self._chapter_payload()["chapters"],
+            categories=categories,
             version="1",
             build_date="2026.01.01",
         )
