@@ -167,6 +167,64 @@ DATABASE_URL=postgresql://...    # .env.production
 - ステージング環境のDB設定（次のスプリントで対応）
 </code></pre>
 <hr />
+<h2>構想段階の合意の永続化（📝WIPメモ）</h2>
+<p>決定ログ（<code>01_DECISIONS/</code>）は「確定した決定」を記録しますが、<strong>「合意はしたが spec（設計書）は未作成」の中間状態</strong>が存在します。この中間状態の設計判断（構想）は会話の中にしか存在せず、次セッションで消えてしまう問題があります。これを防ぐため、構想段階の合意は <code>バックログ.md</code> 該当タスク直下の <strong>📝WIPメモ</strong> として永続化します（真実のソースを増やさない・タスクと運命共同体でゴミ化防止）。</p>
+<h3>ABC の3層（振り分け）</h3>
+<p>合意段階の内容は、重さで3層に振り分けます:</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>層</th>
+<th>名前</th>
+<th>場所</th>
+<th>条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A</strong></td>
+<td>構想（📝WIPメモ）</td>
+<td><code>バックログ.md</code> 該当タスク直下</td>
+<td>設計判断を含む（複数案評価・トレードオフ記録）</td>
+</tr>
+<tr>
+<td><strong>B</strong></td>
+<td>バックログ行</td>
+<td><code>バックログ.md</code> の通常タスク行</td>
+<td>単一アクションで完結</td>
+</tr>
+<tr>
+<td><strong>C</strong></td>
+<td>spec</td>
+<td><code>docs/superpowers/specs/</code></td>
+<td>実装可能な詳細仕様まで詰まっている</td>
+</tr>
+</tbody>
+</table></div>
+<div class="callout callout-info"><p>判定不能 → 構想（安全側）</p></div>
+<h3>構想メモの形式（軽量）</h3>
+<p>該当タスク行の直下にインデントブロックで記載します:</p>
+<pre><code class="language-markdown">- [ ] &lt;タスク名&gt; — &lt;概要&gt;
+  - 📝 構想(YYYY-MM-DD): &lt;方針1-2行&gt;
+    - 経緯: &lt;候補/選択理由/却下&gt;
+    - 次タスク: &lt;承認済・設計未着手の内容&gt;
+</code></pre>
+<h3>なぜバックログ直下か（設計根拠）</h3>
+<p>行方不明防止に必要なのは「場所」でなく「<strong>タスクとの紐付け（関係）</strong>」。バックログ直下は関係を構造的に持つ唯一の方式で、タスクの運命共同体となります（タスク破棄時にメモも消える＝ゴミ化防止）。専用フォルダを増やさないのがポイントです。</p>
+<h3>ライフサイクル（状態遷移必須・放置禁止）</h3>
+<ul>
+<li><strong>spec化</strong>: 構想が spec に昇格したら、メモ → spec へのリンクに置換</li>
+<li><strong>タスク破棄</strong>: タスクが破棄されたらメモも消える（運命共同体）</li>
+<li><strong>滞留ガード</strong>: 📝WIPメモのまま30日更新なければ破棄候補としてフラグ</li>
+<li><strong>長文化</strong>: 構想が長くなりそうなら最初から spec 直行（📝WIPメモは軽量が前提）</li>
+</ul>
+<h3>発動タイミング</h3>
+<ul>
+<li><strong>明示キーワード</strong>: ユーザーが「これ残して」「決定事項にして」「構想メモ」と言った時 → <code>ssot-record</code> スキル（構想モード）で該当タスク直下に追記</li>
+<li><strong>ルートα</strong>: <code>brainstorming</code> / <code>sentaku</code> スキル終了時に spec を出力しなかった場合 →「代わりに構想をバックログ該当タスク直下に📝WIPメモとして残しますか?」と確認</li>
+<li>能動検知（LLMの自律提案）は行わない（誤検知/アラート疲労回避・迷ったら出さない）。<code>resume-session</code> が安全網</li>
+</ul>
+<hr />
 <h2>日記フォーマット</h2>
 <pre><code class="language-markdown"># 2026-05-31
 
@@ -363,7 +421,7 @@ SSOT ファイル作成 → _INDEX.md 追記 → 日記追記
          · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
          · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
          · <a href="https://fukukei23.github.io/">fukukei23</a></p>
-        <p class="site-version">v1.1655 · 2026.07.05</p>
+        <p class="site-version">v1.1656 · 2026.07.05</p>
     </footer>
 
     <script src="../assets/script.js"></script>
