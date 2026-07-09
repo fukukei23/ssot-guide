@@ -340,6 +340,14 @@ def _build(self):
 <td>Actions workflow（<code>path: .</code>）と branch <code>/docs</code> は排他。branch 方式にするなら該当 workflow を削除</td>
 </tr>
 <tr>
+<td><code>build-deploy.yml</code> の <code>cache: 'pip'</code></td>
+<td>requirements.txt / pyproject.toml 未配置リポだと <code>setup-python</code> がエラーになる。該当行を削除（dev-textbook 実例）</td>
+</tr>
+<tr>
+<td><code>test_convert.py</code> の slug 名</td>
+<td><code>rewrite_links</code> のアンカー付きリンクテスト等が旧 <code>CHAPTER_MAP</code> の slug に依存。新章の slug に書き換え</td>
+</tr>
+<tr>
 <td>旧URLからの移行</td>
 <td>旧リポの <code>index.html</code> を <code>meta refresh</code> リダイレクトページ化</td>
 </tr>
@@ -350,6 +358,7 @@ def _build(self):
 <h3>参考実装</h3>
 <ul>
 <li><strong>ssh-guide</strong>: https://github.com/fukukei23/ssh-guide （手書きHTML → 5章パイプラインへ移行）</li>
+<li><strong>dev-textbook</strong>: https://github.com/fukukei23/dev-textbook （ssot-guide 流用で新規立ち上げ・読む系14章の統合教科書。sed一括置換でブランド名/URL書き換え・build-deploy.yml の <code>cache:'pip'</code> 落とし穴実例）</li>
 <li>設計・計画・記録: <code>obsidian-ssot/docs/superpowers/{specs,plans}/</code>・<code>01_DECISIONS/claude-code/</code></li>
 </ul>
 
@@ -371,7 +380,7 @@ def _build(self):
          · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
          · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
          · <a href="https://fukukei23.github.io/">fukukei23</a></p>
-        <p class="site-version">v1.1991 · 2026.07.09</p>
+        <p class="site-version">v1.1992 · 2026.07.09</p>
     </footer>
 
     <script src="../assets/script.js"></script>
