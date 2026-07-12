@@ -1,287 +1,176 @@
-# 03 Claude Code統合 — SSOTをClaude Codeと接続する
+# 03 SSOT
 
-> CLAUDE.md・settings.json・Hooksを使ってSSOTをAIの「長期記憶」にする
-
----
-
-## 3層設定アーキテクチャ
-
-```
-Layer 1: グローバル設定
-~/.claude/CLAUDE.md          ← 全プロジェクト共通のルール
-~/.claude/settings.json      ← Hooks・権限・環境変数
-
-Layer 2: プロジェクト設定
-<repo>/CLAUDE.md             ← このプロジェクト固有のルール
-
-Layer 3: ディレクトリ設定
-<repo>/<dir>/CLAUDE.md       ← 特定ディレクトリのルール（必要時のみ）
-```
-
-**重要**: 下位レイヤーが上位レイヤーを上書きする（Layer 3 > Layer 2 > Layer 1）
+> SSOT関連スキルと特性カタログ
 
 ---
 
-## CLAUDE.mdの設計
+## SSOTレコード
 
-### グローバルCLAUDE.mdに書くべきこと
+「記録して」「保存して」と言うだけでSSOTへの記録・振り分け・ガイド転記まで自動化されるスキル。
 
-```markdown
-# グローバル設定
+### トリガーワード
 
-## 基本ルール
-- 日本語で回答する
-- コードは変更前に既存実装を理解してから変更する
+- 「記録して」
+- 「保存して」
+- 「メモして」
+- 「SSOTに入れて」
+- 「ガイドに追加して」
+- `/ssot-record`
 
-## LLM利用ポリシー（環境別）
-
-**WSL CLI版**: `ANTHROPIC_BASE_URL` をglm-rate-proxy（localhost:8787）に向けることでClaude Code CLI自体をGLMで動作させる。MiniMaxはレート制限時のフォールバック先としてプロキシに設定。
-
-**Windows Desktop版**: エンドポイント変更不可のためLLMはSonnet固定。GLM/MiniMaxはMCPサーバー（glm MCP / minimax MCP）経由でSonnetから委譲して使う。
-
-```markdown
-## LLM利用ポリシー（WSL CLI版の例）
-- メインLLM: GLM（glm-rate-proxy経由）
-- フォールバック: MiniMax（レート制限時・ピーク時）
-- Sonnet直接回答: 要ユーザー許可
-```
-
-## セキュリティ
-- APIキー値を会話・ファイルに書き込まない
-- 詳細: ~/projects/ssot/security-policy.md
-
-## SSOT参照
-- 設計哲学: ~/projects/ssot/00_SYSTEM/チャーター.md
-- ルール: ~/projects/ssot/00_SYSTEM/共通ルール/ルール.md
-```
-
-### プロジェクトCLAUDE.mdに書くべきこと
-
-```markdown
-# プロジェクトA固有設定
-
-## 技術スタック
-- Python 3.12 + FastAPI
-- PostgreSQL（Supabase）
-- テスト: pytest
-
-## ブランチ運用
-- main直接コミット
-- PRは外部公開機能のみ
-
-## 禁止事項
-- `rm -rf` 系コマンド
-- 本番DBへの直接接続
-```
-
----
-
-## Hooks設計
-
-4種のHookでClaude Codeを自動化：
-
-| Hook | タイミング | 用途 |
-|---|---|---|
-| `PreToolUse` | ツール実行前 | 危険コマンドのブロック |
-| `PostToolUse` | ツール実行後 | ログ記録・通知 |
-| `SessionStart` | セッション開始時 | 前回引継ぎ・バックログ表示 |
-| `Stop` | セッション終了時 | 日記の自動更新 |
-
-### PreToolUseで危険コマンドをブロック
-
-```json
-{
-  "hooks": {
-    "PreToolUse": [{
-      "matcher": "Bash",
-      "hooks": [{
-        "type": "command",
-        "command": "python3 ~/.claude/scripts/check-command-safety.py"
-      }]
-    }]
-  }
-}
-```
-
-```python
-# check-command-safety.py（概念）
-import json, sys
-
-BLOCKED = ["rm -rf", "DROP TABLE", "git push --force", "sudo"]
-
-data = json.load(sys.stdin)
-cmd = data.get("tool_input", {}).get("command", "")
-
-for pattern in BLOCKED:
-    if pattern in cmd:
-        print(json.dumps({"decision": "block", "reason": f"危険コマンド: {pattern}"}))
-        sys.exit(0)
-
-print(json.dumps({"decision": "allow"}))
-```
-
-### SessionStartで前回引継ぎを表示
-
-```bash
-#!/bin/bash
-# session-start.sh
-
-# 最新の引継ぎファイルを表示
-HANDOFF="$HOME/.claude/state/handoff.md"
-if [ -f "$HANDOFF" ]; then
-    echo "=== 前回の引継ぎ ==="
-    cat "$HANDOFF"
-    echo ""
-fi
-
-# 今日の日付と作業カウント
-echo "📅 $(date +%Y-%m-%d) | セッション開始"
-```
-
-### Stopでセッション終了を記録
-
-```bash
-#!/bin/bash
-# session-stop.sh
-
-DAILY_DIR="$HOME/projects/ssot/10_DAILY"
-TODAY=$(date +%Y-%m-%d)
-DAILY_FILE="$DAILY_DIR/$TODAY.md"
-
-# 終了時刻を記録
-echo "" >> "$DAILY_FILE"
-echo "---" >> "$DAILY_FILE"
-echo "セッション終了: $(date +%H:%M)" >> "$DAILY_FILE"
-```
-
----
-
-## Memoryシステム
-
-Claude Codeには4種のメモリタイプがある：
+### フロー
 
 ```
-~/.claude/projects/<project-hash>/memory/
-├── user_role.md          ← ユーザーの役割・専門知識
-├── feedback_*.md         ← 過去の指摘・好みのパターン
-├── project_*.md          ← 現在進行中のタスク・決定
-└── MEMORY.md             ← メモリインデックス（自動ロード）
-```
-
-| タイプ | 内容 | 更新タイミング |
-|---|---|---|
-| `user` | 役割・知識レベル・好み | 初回セッション時 |
-| `feedback` | 指摘された問題・確認された方法 | 修正指示があった時 |
-| `project` | 現在の意思決定・背景 | プロジェクトの方針変更時 |
-| `reference` | 外部システムの場所 | 参照先が決まった時 |
-
----
-
-## SSOT + Claude Code の統合フロー
-
-```
-セッション開始
+「記録して」と言う
     ↓
-SessionStart Hook
-    ├── 前回handoff.md を表示
-    ├── バックログを確認
-    └── INDEX drift警告を出力
+GLMが内容を分析して振り分け先を判定
     ↓
-作業中
-    ├── CLAUDE.md のルールに従って実装
-    ├── 決定ファイルを 01_DECISIONS/ に作成
-    └── git commit時に自動でSSOT記録を要求
+📋 判定結果を一画面で提示（転記先も含む）
     ↓
-セッション終了
-    ├── Stop Hook が日記に終了時刻を記録
-    └── handoff.md を更新（次のセッションへ）
+「yes」で承認
+    ↓
+SSOTファイル作成 → _INDEX.md追記 → 日記追記 → ガイド転記 → push
+```
+
+### 判定結果の画面例
+
+```
+📋 記録先の判定結果
+
+📁 メイン: 01_DECISIONS/ssot-guide/2026-05-31_テスト構成.md
+📅 日記追記: あり（10_DAILY/2026-05-31.md）
+📖 ガイド転記: あり → ssot-guide「09_ガイドサイト構築.md」
+   └ 追記内容: test_convert.pyの9クラス構成・テスト保護パターン
+🏷️ タグ: #テスト #品質管理
+
+この振り分けでよいですか？[yes/修正指示]
+```
+
+「yes」と答えるだけで、ファイル作成・日記追記・ガイド転記・pushまで一括実行される。
+
+### 実装詳細
+
+ssot-recordスキルは `~/.claude/skills/ssot-record/` にあり、以下を担当する:
+
+- **判定**: 内容の機密レベル・想定寿命・削除可能性・検索優先度に基づく保管場所判定
+- **転記**: 適切なSSOTフォルダへのファイル生成
+- **連携**: `_INDEX.md` 更新・日記追記・ガイド転記
+- **記録**: プロジェクト固有の記録フォルダ（例: `01_DECISIONS/<project>/`）
+
+詳細: `~/.claude/skills/ssot-record/SKILL.md`
+
+---
+
+## SSOT Search
+
+SSOTを横断検索するスキル。
+
+### トリガーワード
+
+- 「SSOTから探して」
+- 「SSOT検索」
+- 「SSOTで検索」
+- 「ナレッジベースを検索」
+- 「過去の決定を探して」
+- `/ssot-search`
+
+### 検索対象
+
+ssot-searchは以下を検索できる:
+
+- **01_DECISIONS**: 決定ログ・技術詳細
+- **10_DAILY**: 日次サマリー・セッションログ
+- **00_SYSTEM**: 全体マップ・共通ルール・自動化・設定
+- **30_RESEARCH**: 参考資料・調査結果
+- **バックログ**: 未完了タスク・WIP構想
+
+### 検索例
+
+```
+「過去の決定を見たい」
+→ 01_DECISIONS/ssot-guide配下の決定ログをタイトル・内容で全文検索
+
+「今日何をしたか確認したい」
+→ 10_DAILY/2026-07-12.mdのセッションログを検索
+
+「バックログで未完了タスクを確認」
+→ 00_SYSTEM/バックログ.mdの未完了タスクを抽出
 ```
 
 ---
 
-## settings.jsonテンプレート
+## SSOTチェック
 
-```json
-{
-  "defaultMode": "acceptEdits",
-  "env": {
-    "ANTHROPIC_BASE_URL": "http://localhost:8787"
-  },
-  "permissions": {
-    "allow": [
-      "Bash(git *)",
-      "Bash(python3 *)",
-      "Bash(npm *)"
-    ],
-    "deny": [
-      "Bash(rm -rf *)",
-      "Bash(sudo *)"
-    ]
-  },
-  "hooks": {
-    "PreToolUse": [{
-      "matcher": "Bash",
-      "hooks": [{"type": "command", "command": "~/.claude/scripts/check-safety.sh"}]
-    }],
-    "SessionStart": [{"type": "command", "command": "~/.claude/scripts/session-start.sh"}],
-    "Stop": [{"type": "command", "command": "~/.claude/scripts/session-stop.sh"}]
-  }
-}
-```
+SSOTと実際のファイル/設定の整合性をチェックし、乖離があれば修正するスキル。
 
----
+### トリガーワード
 
-## スキル管理体系
+- 「SSOT整合性チェックして」
+- 「SSOT整理して」
+- 「SSOT同期して」
+- 「SSOTのズレを直して」
+- 「00_SYSTEM更新して」
+- 「乖離を修正して」
+- `/ssot-check`
 
-Claude Codeのスキル（~/.claude/skills/）を管理し、SSOTとの同期を確保する。
+### チェック対象
 
-### 既存スキル一覧
-
-| スキル名 | トリガー | 用途 |
-|---|---|---|
-| **ssot-record** | 「記録して」「保存して」等 | SSOTへの記録・振り分けの自動化 |
-| **ssot-search** | 「SSOTから探して」等 | SSOT内を検索 |
-| **ssot-sync** | 「SSOT整合性チェックして」「整理して」等 | SSOTと実態の乖離をチェック・修正 |
-| **teian** | 「提案して」「どう思う」等 | 軽量提案（brainstormingへの誘導も） |
-| **record-decision** | 「判断を記録して」等 | 技術決定の記録 |
-| **update-guide** | 「/update-guide」 | ガイドサイトの更新キュー処理 |
-
-### ssot-sync スキル（整合性チェック）
-
-**トリガーワード**:
-- 「SSOT整合性チェックして」「SSOT整理して」「SSOT同期して」
-- 「SSOTのズレを直して」「00_SYSTEM更新して」「乖離を修正して」
-- `/ssot-sync`
-
-**チェック対象**:
-- `00_SYSTEM/自動化.md` — hooks/cron/スクリプトの記載漏れ
-- `00_SYSTEM/repo-index.yaml` — リポジトリ数・visibility・last_updated
-- `00_SYSTEM/MCPツール使い分けガイド.md` — 有効サーバー数
-- `00_SYSTEM/全体マップ_MOC.md` — リポジトリ数・プロジェクト一覧
-- `00_SYSTEM/チャーター.md` — 禁止操作リスト
-
-**乖離が蓄積する構造と定期運用**:
-
-SSOTの記述（自動化.md/MCPガイド/repo-index.yaml等）は、実態（Cron実体・MCP構成・リポ数・プロジェクト追加）の変更に追従しきれず、徐々に乖離が蓄積する。これは例外ではなく構造的な性質（記述は手動・実態は自動/頻繁更新）。主な乖離パターン:
-
-- 設計変更後の記述未更新（例: MCP のプロファイル分離で帰属だけが古いまま）
-- リポジトリ/プロジェクト追加時の index 未追記
-- Cron 実体の増減と記述のズレ（ゴーストCron: 記載のみで実体なし、等）
-
-→ 月金の `ssot-sync auto`（高重要度のみ自動修正）+ 対話モードでの深掘り検証（sentaku L2 で実測ベースの淘汰）が乖離回収の主回路。深掘り検証では「表層の数だけでなく実態を計測する」（例: バックログ退避対象0件の実測がゴーストCronの実体化を退ける）。
-
-### スキル追加時のルール
-
-新しいスキルを ~/.claude/skills/ に作成した時は:
-
-1. **01_DECISIONS/claude-code/_INDEX.md** に記録
-2. **ssot-guide** のこのセクションに追記
-3. 自動化関連なら **00_SYSTEM/自動化.md** も更新
-
-### ssot-record と ssot-sync の使い分け
-
-| 状況 | スキル |
+| 対象 | 内容 |
 |---|---|
-| 作業内容を記録したい | `ssot-record`（「記録して」） |
-| SSOTの情報が古いか確認したい | `ssot-sync`（「SSOT整理して」） |
-| SSOTから情報を探したい | `ssot-search`（「SSOTから探して」） |
+| `00_SYSTEM/自動化.md` | hooks/cron/スクリプトの記載漏れ |
+| `00_SYSTEM/repo-index.yaml` | リポジトリ数・visibility・last_updated |
+| `00_SYSTEM/MCPツール使い分けガイド.md` | 有効サーバー数 |
+| `00_SYSTEM/全体マップ_MOC.md` | リポジトリ数・プロジェクト一覧 |
+| `00_SYSTEM/チャーター.md` | 禁止操作リスト |
+
+### 乖離パターン
+
+SSOTの記述は実態の変更に追従しきれず、以下の乖離が蓄積する:
+
+- **設計変更後の記述未更新**: 例: MCPのプロファイル分離で帰属だけが古いまま
+- **リポジトリ追加時のindex未追記**: 新しいプロジェクトを追加してもrepo-index.yamlが更新されない
+- **Cron実体の増減と記述のズレ**: ゴーストCron（記載のみで実体なし）や消失したCronの残骸
+
+### 定期運用
+
+- **自動修正**: 月金の `ssot-sync auto`（高重要度のみ自動修正）
+- **対話検証**: sentaku L2で実測ベースの検証（表層の数だけでなく実態を計測）
+
+---
+
+## 特性カタログ
+
+SSOTの9つの保管場所の分類基準。
+
+### 保管場所構成
+
+| 場所 | 機密レベル | 想定寿命 | 削除可能性 | 検索優先度 | 用途 |
+|---|---|---|---|---|---|
+| **01_DECISIONS/<project>** | 中〜高 | 長期（数ヶ月〜1年） | 困難（履歴付き） | 高 | 決定ログ・技術詳細・なぜそうしたか |
+| **10_DAILY/YYYY-MM-DD** | 低〜中 | 短期（数日〜1週間） | 容易（日次ローテーション） | 中 | 日次サマリー・セッションログ |
+| **00_SYSTEM/** | 低 | 長期（基本永続） | 困難（全体マップ） | 中 | 全体マップ・共通ルール・自動化・設定 |
+| **30_RESEARCH/** | 中 | 中期（数週間〜1ヶ月） | 中等 | 低〜中 | 参考資料・調査結果・調査プロセス |
+| **バックログ.md** | 低〜中 | 中期（プロジェクト期間） | 中等 | 中 | 未完了タスク・WIP構想・作業管理 |
+| **20_PUBLISHING/** | 高 | 短期（公開期間限定） | 容易（公開終了後） | 低 | 外部公開コンテンツ・記事下書き |
+| **プロジェクト固有フォルダ** | プロジェクト依存 | 短期〜中期 | 中等 | 低〜中 | プロジェクト固有のドキュメント |
+| **メモリ** | 中 | 短期（セッション期間） | 即時 | 高 | セッション中のコンテキスト・一時情報 |
+| **feedback_*.md** | 低〜中 | 中期 | 中等 | 低〜中 | ユーザー指摘・好みのパターン |
+
+### 判定基準
+
+**保管場所の決定基準**:
+
+1. **機密レベル**: 外部公開可否
+2. **想定寿命**: 将来の参照頻度
+3. **削除可能性**: 定期的な整理が必要か
+4. **検索優先度**: よく検索する内容か
+
+**用途に応じた振り分け**:
+
+- 「なぜそう決めたか」 → `01_DECISIONS/`
+- 「今日何をしたか」 → `10_DAILY/`
+- 「全体像」 → `00_SYSTEM/`
+- 「調査内容」 → `30_RESEARCH/`
+- 「やるべきこと」 → `バックログ.md`
+- 「外部公開」 → `20_PUBLISHING/`
+
+詳細は `00_SYSTEM/特性カタログ/01_保管場所.md` を参照。
