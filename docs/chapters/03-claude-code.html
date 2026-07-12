@@ -105,345 +105,247 @@
         </div>
 
         <article class="chapter-body">
-            <h1>03 Claude Code統合 — SSOTをClaude Codeと接続する</h1>
-<div class="callout callout-info"><p>CLAUDE.md・settings.json・Hooksを使ってSSOTをAIの「長期記憶」にする</p></div>
+            <h1>03 SSOT</h1>
+<div class="callout callout-info"><p>SSOT関連スキルと特性カタログ</p></div>
 <hr />
-<h2>3層設定アーキテクチャ</h2>
-<pre><code>Layer 1: グローバル設定
-~/.claude/CLAUDE.md          ← 全プロジェクト共通のルール
-~/.claude/settings.json      ← Hooks・権限・環境変数
-
-Layer 2: プロジェクト設定
-&lt;repo&gt;/CLAUDE.md             ← このプロジェクト固有のルール
-
-Layer 3: ディレクトリ設定
-&lt;repo&gt;/&lt;dir&gt;/CLAUDE.md       ← 特定ディレクトリのルール（必要時のみ）
-</code></pre>
-<p><strong>重要</strong>: 下位レイヤーが上位レイヤーを上書きする（Layer 3 &gt; Layer 2 &gt; Layer 1）</p>
-<hr />
-<h2>CLAUDE.mdの設計</h2>
-<h3>グローバルCLAUDE.mdに書くべきこと</h3>
-<pre><code class="language-markdown"># グローバル設定
-
-## 基本ルール
-- 日本語で回答する
-- コードは変更前に既存実装を理解してから変更する
-
-## LLM利用ポリシー（環境別）
-
-**WSL CLI版**: `ANTHROPIC_BASE_URL` をglm-rate-proxy（localhost:8787）に向けることでClaude Code CLI自体をGLMで動作させる。MiniMaxはレート制限時のフォールバック先としてプロキシに設定。
-
-**Windows Desktop版**: エンドポイント変更不可のためLLMはSonnet固定。GLM/MiniMaxはMCPサーバー（glm MCP / minimax MCP）経由でSonnetから委譲して使う。
-
-```markdown
-## LLM利用ポリシー（WSL CLI版の例）
-- メインLLM: GLM（glm-rate-proxy経由）
-- フォールバック: MiniMax（レート制限時・ピーク時）
-- Sonnet直接回答: 要ユーザー許可
-</code></pre>
-<h2>セキュリティ</h2>
+<h2>SSOTレコード</h2>
+<p>「記録して」「保存して」と言うだけでSSOTへの記録・振り分け・ガイド転記まで自動化されるスキル。</p>
+<h3>トリガーワード</h3>
 <ul>
-<li>APIキー値を会話・ファイルに書き込まない</li>
-<li>詳細: ~/projects/ssot/security-policy.md</li>
+<li>「記録して」</li>
+<li>「保存して」</li>
+<li>「メモして」</li>
+<li>「SSOTに入れて」</li>
+<li>「ガイドに追加して」</li>
+<li><code>/ssot-record</code></li>
 </ul>
-<h2>SSOT参照</h2>
+<h3>フロー</h3>
+<pre><code>「記録して」と言う
+    ↓
+GLMが内容を分析して振り分け先を判定
+    ↓
+📋 判定結果を一画面で提示（転記先も含む）
+    ↓
+「yes」で承認
+    ↓
+SSOTファイル作成 → _INDEX.md追記 → 日記追記 → ガイド転記 → push
+</code></pre>
+<h3>判定結果の画面例</h3>
+<pre><code>📋 記録先の判定結果
+
+📁 メイン: 01_DECISIONS/ssot-guide/2026-05-31_テスト構成.md
+📅 日記追記: あり（10_DAILY/2026-05-31.md）
+📖 ガイド転記: あり → ssot-guide「09_ガイドサイト構築.md」
+   └ 追記内容: test_convert.pyの9クラス構成・テスト保護パターン
+🏷️ タグ: #テスト #品質管理
+
+この振り分けでよいですか？[yes/修正指示]
+</code></pre>
+<p>「yes」と答えるだけで、ファイル作成・日記追記・ガイド転記・pushまで一括実行される。</p>
+<h3>実装詳細</h3>
+<p>ssot-recordスキルは <code>~/.claude/skills/ssot-record/</code> にあり、以下を担当する:</p>
 <ul>
-<li>設計哲学: ~/projects/ssot/00_SYSTEM/チャーター.md</li>
-<li>ルール: ~/projects/ssot/00_SYSTEM/共通ルール/ルール.md</li>
+<li><strong>判定</strong>: 内容の機密レベル・想定寿命・削除可能性・検索優先度に基づく保管場所判定</li>
+<li><strong>転記</strong>: 適切なSSOTフォルダへのファイル生成</li>
+<li><strong>連携</strong>: <code>_INDEX.md</code> 更新・日記追記・ガイド転記</li>
+<li><strong>記録</strong>: プロジェクト固有の記録フォルダ（例: <code>01_DECISIONS/&lt;project&gt;/</code>）</li>
 </ul>
-<pre><code>
-### プロジェクトCLAUDE.mdに書くべきこと
+<p>詳細: <code>~/.claude/skills/ssot-record/SKILL.md</code></p>
+<hr />
+<h2>SSOT Search</h2>
+<p>SSOTを横断検索するスキル。</p>
+<h3>トリガーワード</h3>
+<ul>
+<li>「SSOTから探して」</li>
+<li>「SSOT検索」</li>
+<li>「SSOTで検索」</li>
+<li>「ナレッジベースを検索」</li>
+<li>「過去の決定を探して」</li>
+<li><code>/ssot-search</code></li>
+</ul>
+<h3>検索対象</h3>
+<p>ssot-searchは以下を検索できる:</p>
+<ul>
+<li><strong>01_DECISIONS</strong>: 決定ログ・技術詳細</li>
+<li><strong>10_DAILY</strong>: 日次サマリー・セッションログ</li>
+<li><strong>00_SYSTEM</strong>: 全体マップ・共通ルール・自動化・設定</li>
+<li><strong>30_RESEARCH</strong>: 参考資料・調査結果</li>
+<li><strong>バックログ</strong>: 未完了タスク・WIP構想</li>
+</ul>
+<h3>検索例</h3>
+<pre><code>「過去の決定を見たい」
+→ 01_DECISIONS/ssot-guide配下の決定ログをタイトル・内容で全文検索
 
-```markdown
-# プロジェクトA固有設定
+「今日何をしたか確認したい」
+→ 10_DAILY/2026-07-12.mdのセッションログを検索
 
-## 技術スタック
-- Python 3.12 + FastAPI
-- PostgreSQL（Supabase）
-- テスト: pytest
-
-## ブランチ運用
-- main直接コミット
-- PRは外部公開機能のみ
-
-## 禁止事項
-- `rm -rf` 系コマンド
-- 本番DBへの直接接続
+「バックログで未完了タスクを確認」
+→ 00_SYSTEM/バックログ.mdの未完了タスクを抽出
 </code></pre>
 <hr />
-<h2>Hooks設計</h2>
-<p>4種のHookでClaude Codeを自動化：</p>
+<h2>SSOTチェック</h2>
+<p>SSOTと実際のファイル/設定の整合性をチェックし、乖離があれば修正するスキル。</p>
+<h3>トリガーワード</h3>
+<ul>
+<li>「SSOT整合性チェックして」</li>
+<li>「SSOT整理して」</li>
+<li>「SSOT同期して」</li>
+<li>「SSOTのズレを直して」</li>
+<li>「00_SYSTEM更新して」</li>
+<li>「乖離を修正して」</li>
+<li><code>/ssot-check</code></li>
+</ul>
+<h3>チェック対象</h3>
 <div class="table-wrapper"><table>
 <thead>
 <tr>
-<th>Hook</th>
-<th>タイミング</th>
-<th>用途</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>PreToolUse</code></td>
-<td>ツール実行前</td>
-<td>危険コマンドのブロック</td>
-</tr>
-<tr>
-<td><code>PostToolUse</code></td>
-<td>ツール実行後</td>
-<td>ログ記録・通知</td>
-</tr>
-<tr>
-<td><code>SessionStart</code></td>
-<td>セッション開始時</td>
-<td>前回引継ぎ・バックログ表示</td>
-</tr>
-<tr>
-<td><code>Stop</code></td>
-<td>セッション終了時</td>
-<td>日記の自動更新</td>
-</tr>
-</tbody>
-</table></div>
-<h3>PreToolUseで危険コマンドをブロック</h3>
-<pre><code class="language-json">{
-  &quot;hooks&quot;: {
-    &quot;PreToolUse&quot;: [{
-      &quot;matcher&quot;: &quot;Bash&quot;,
-      &quot;hooks&quot;: [{
-        &quot;type&quot;: &quot;command&quot;,
-        &quot;command&quot;: &quot;python3 ~/.claude/scripts/check-command-safety.py&quot;
-      }]
-    }]
-  }
-}
-</code></pre>
-<pre><code class="language-python"># check-command-safety.py（概念）
-import json, sys
-
-BLOCKED = [&quot;rm -rf&quot;, &quot;DROP TABLE&quot;, &quot;git push --force&quot;, &quot;sudo&quot;]
-
-data = json.load(sys.stdin)
-cmd = data.get(&quot;tool_input&quot;, {}).get(&quot;command&quot;, &quot;&quot;)
-
-for pattern in BLOCKED:
-    if pattern in cmd:
-        print(json.dumps({&quot;decision&quot;: &quot;block&quot;, &quot;reason&quot;: f&quot;危険コマンド: {pattern}&quot;}))
-        sys.exit(0)
-
-print(json.dumps({&quot;decision&quot;: &quot;allow&quot;}))
-</code></pre>
-<h3>SessionStartで前回引継ぎを表示</h3>
-<pre><code class="language-bash">#!/bin/bash
-# session-start.sh
-
-# 最新の引継ぎファイルを表示
-HANDOFF=&quot;$HOME/.claude/state/handoff.md&quot;
-if [ -f &quot;$HANDOFF&quot; ]; then
-    echo &quot;=== 前回の引継ぎ ===&quot;
-    cat &quot;$HANDOFF&quot;
-    echo &quot;&quot;
-fi
-
-# 今日の日付と作業カウント
-echo &quot;📅 $(date +%Y-%m-%d) | セッション開始&quot;
-</code></pre>
-<h3>Stopでセッション終了を記録</h3>
-<pre><code class="language-bash">#!/bin/bash
-# session-stop.sh
-
-DAILY_DIR=&quot;$HOME/projects/ssot/10_DAILY&quot;
-TODAY=$(date +%Y-%m-%d)
-DAILY_FILE=&quot;$DAILY_DIR/$TODAY.md&quot;
-
-# 終了時刻を記録
-echo &quot;&quot; &gt;&gt; &quot;$DAILY_FILE&quot;
-echo &quot;---&quot; &gt;&gt; &quot;$DAILY_FILE&quot;
-echo &quot;セッション終了: $(date +%H:%M)&quot; &gt;&gt; &quot;$DAILY_FILE&quot;
-</code></pre>
-<hr />
-<h2>Memoryシステム</h2>
-<p>Claude Codeには4種のメモリタイプがある：</p>
-<pre><code>~/.claude/projects/&lt;project-hash&gt;/memory/
-├── user_role.md          ← ユーザーの役割・専門知識
-├── feedback_*.md         ← 過去の指摘・好みのパターン
-├── project_*.md          ← 現在進行中のタスク・決定
-└── MEMORY.md             ← メモリインデックス（自動ロード）
-</code></pre>
-<div class="table-wrapper"><table>
-<thead>
-<tr>
-<th>タイプ</th>
+<th>対象</th>
 <th>内容</th>
-<th>更新タイミング</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>user</code></td>
-<td>役割・知識レベル・好み</td>
-<td>初回セッション時</td>
+<td><code>00_SYSTEM/自動化.md</code></td>
+<td>hooks/cron/スクリプトの記載漏れ</td>
 </tr>
 <tr>
-<td><code>feedback</code></td>
-<td>指摘された問題・確認された方法</td>
-<td>修正指示があった時</td>
+<td><code>00_SYSTEM/repo-index.yaml</code></td>
+<td>リポジトリ数・visibility・last_updated</td>
 </tr>
 <tr>
-<td><code>project</code></td>
-<td>現在の意思決定・背景</td>
-<td>プロジェクトの方針変更時</td>
+<td><code>00_SYSTEM/MCPツール使い分けガイド.md</code></td>
+<td>有効サーバー数</td>
 </tr>
 <tr>
-<td><code>reference</code></td>
-<td>外部システムの場所</td>
-<td>参照先が決まった時</td>
+<td><code>00_SYSTEM/全体マップ_MOC.md</code></td>
+<td>リポジトリ数・プロジェクト一覧</td>
+</tr>
+<tr>
+<td><code>00_SYSTEM/チャーター.md</code></td>
+<td>禁止操作リスト</td>
 </tr>
 </tbody>
 </table></div>
+<h3>乖離パターン</h3>
+<p>SSOTの記述は実態の変更に追従しきれず、以下の乖離が蓄積する:</p>
+<ul>
+<li><strong>設計変更後の記述未更新</strong>: 例: MCPのプロファイル分離で帰属だけが古いまま</li>
+<li><strong>リポジトリ追加時のindex未追記</strong>: 新しいプロジェクトを追加してもrepo-index.yamlが更新されない</li>
+<li><strong>Cron実体の増減と記述のズレ</strong>: ゴーストCron（記載のみで実体なし）や消失したCronの残骸</li>
+</ul>
+<h3>定期運用</h3>
+<ul>
+<li><strong>自動修正</strong>: 月金の <code>ssot-sync auto</code>（高重要度のみ自動修正）</li>
+<li><strong>対話検証</strong>: sentaku L2で実測ベースの検証（表層の数だけでなく実態を計測）</li>
+</ul>
 <hr />
-<h2>SSOT + Claude Code の統合フロー</h2>
-<pre><code>セッション開始
-    ↓
-SessionStart Hook
-    ├── 前回handoff.md を表示
-    ├── バックログを確認
-    └── INDEX drift警告を出力
-    ↓
-作業中
-    ├── CLAUDE.md のルールに従って実装
-    ├── 決定ファイルを 01_DECISIONS/ に作成
-    └── git commit時に自動でSSOT記録を要求
-    ↓
-セッション終了
-    ├── Stop Hook が日記に終了時刻を記録
-    └── handoff.md を更新（次のセッションへ）
-</code></pre>
-<hr />
-<h2>settings.jsonテンプレート</h2>
-<pre><code class="language-json">{
-  &quot;defaultMode&quot;: &quot;acceptEdits&quot;,
-  &quot;env&quot;: {
-    &quot;ANTHROPIC_BASE_URL&quot;: &quot;http://localhost:8787&quot;
-  },
-  &quot;permissions&quot;: {
-    &quot;allow&quot;: [
-      &quot;Bash(git *)&quot;,
-      &quot;Bash(python3 *)&quot;,
-      &quot;Bash(npm *)&quot;
-    ],
-    &quot;deny&quot;: [
-      &quot;Bash(rm -rf *)&quot;,
-      &quot;Bash(sudo *)&quot;
-    ]
-  },
-  &quot;hooks&quot;: {
-    &quot;PreToolUse&quot;: [{
-      &quot;matcher&quot;: &quot;Bash&quot;,
-      &quot;hooks&quot;: [{&quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;~/.claude/scripts/check-safety.sh&quot;}]
-    }],
-    &quot;SessionStart&quot;: [{&quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;~/.claude/scripts/session-start.sh&quot;}],
-    &quot;Stop&quot;: [{&quot;type&quot;: &quot;command&quot;, &quot;command&quot;: &quot;~/.claude/scripts/session-stop.sh&quot;}]
-  }
-}
-</code></pre>
-<hr />
-<h2>スキル管理体系</h2>
-<p>Claude Codeのスキル（~/.claude/skills/）を管理し、SSOTとの同期を確保する。</p>
-<h3>既存スキル一覧</h3>
+<h2>特性カタログ</h2>
+<p>SSOTの9つの保管場所の分類基準。</p>
+<h3>保管場所構成</h3>
 <div class="table-wrapper"><table>
 <thead>
 <tr>
-<th>スキル名</th>
-<th>トリガー</th>
+<th>場所</th>
+<th>機密レベル</th>
+<th>想定寿命</th>
+<th>削除可能性</th>
+<th>検索優先度</th>
 <th>用途</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>ssot-record</strong></td>
-<td>「記録して」「保存して」等</td>
-<td>SSOTへの記録・振り分けの自動化</td>
+<td><strong>01_DECISIONS/&lt;project&gt;</strong></td>
+<td>中〜高</td>
+<td>長期（数ヶ月〜1年）</td>
+<td>困難（履歴付き）</td>
+<td>高</td>
+<td>決定ログ・技術詳細・なぜそうしたか</td>
 </tr>
 <tr>
-<td><strong>ssot-search</strong></td>
-<td>「SSOTから探して」等</td>
-<td>SSOT内を検索</td>
+<td><strong>10_DAILY/YYYY-MM-DD</strong></td>
+<td>低〜中</td>
+<td>短期（数日〜1週間）</td>
+<td>容易（日次ローテーション）</td>
+<td>中</td>
+<td>日次サマリー・セッションログ</td>
 </tr>
 <tr>
-<td><strong>ssot-sync</strong></td>
-<td>「SSOT整合性チェックして」「整理して」等</td>
-<td>SSOTと実態の乖離をチェック・修正</td>
+<td><strong>00_SYSTEM/</strong></td>
+<td>低</td>
+<td>長期（基本永続）</td>
+<td>困難（全体マップ）</td>
+<td>中</td>
+<td>全体マップ・共通ルール・自動化・設定</td>
 </tr>
 <tr>
-<td><strong>teian</strong></td>
-<td>「提案して」「どう思う」等</td>
-<td>軽量提案（brainstormingへの誘導も）</td>
+<td><strong>30_RESEARCH/</strong></td>
+<td>中</td>
+<td>中期（数週間〜1ヶ月）</td>
+<td>中等</td>
+<td>低〜中</td>
+<td>参考資料・調査結果・調査プロセス</td>
 </tr>
 <tr>
-<td><strong>record-decision</strong></td>
-<td>「判断を記録して」等</td>
-<td>技術決定の記録</td>
+<td><strong>バックログ.md</strong></td>
+<td>低〜中</td>
+<td>中期（プロジェクト期間）</td>
+<td>中等</td>
+<td>中</td>
+<td>未完了タスク・WIP構想・作業管理</td>
 </tr>
 <tr>
-<td><strong>update-guide</strong></td>
-<td>「/update-guide」</td>
-<td>ガイドサイトの更新キュー処理</td>
+<td><strong>20_PUBLISHING/</strong></td>
+<td>高</td>
+<td>短期（公開期間限定）</td>
+<td>容易（公開終了後）</td>
+<td>低</td>
+<td>外部公開コンテンツ・記事下書き</td>
+</tr>
+<tr>
+<td><strong>プロジェクト固有フォルダ</strong></td>
+<td>プロジェクト依存</td>
+<td>短期〜中期</td>
+<td>中等</td>
+<td>低〜中</td>
+<td>プロジェクト固有のドキュメント</td>
+</tr>
+<tr>
+<td><strong>メモリ</strong></td>
+<td>中</td>
+<td>短期（セッション期間）</td>
+<td>即時</td>
+<td>高</td>
+<td>セッション中のコンテキスト・一時情報</td>
+</tr>
+<tr>
+<td><strong>feedback_*.md</strong></td>
+<td>低〜中</td>
+<td>中期</td>
+<td>中等</td>
+<td>低〜中</td>
+<td>ユーザー指摘・好みのパターン</td>
 </tr>
 </tbody>
 </table></div>
-<h3>ssot-sync スキル（整合性チェック）</h3>
-<p><strong>トリガーワード</strong>:</p>
-<ul>
-<li>「SSOT整合性チェックして」「SSOT整理して」「SSOT同期して」</li>
-<li>「SSOTのズレを直して」「00_SYSTEM更新して」「乖離を修正して」</li>
-<li><code>/ssot-sync</code></li>
-</ul>
-<p><strong>チェック対象</strong>:</p>
-<ul>
-<li><code>00_SYSTEM/自動化.md</code> — hooks/cron/スクリプトの記載漏れ</li>
-<li><code>00_SYSTEM/repo-index.yaml</code> — リポジトリ数・visibility・last_updated</li>
-<li><code>00_SYSTEM/MCPツール使い分けガイド.md</code> — 有効サーバー数</li>
-<li><code>00_SYSTEM/全体マップ_MOC.md</code> — リポジトリ数・プロジェクト一覧</li>
-<li><code>00_SYSTEM/チャーター.md</code> — 禁止操作リスト</li>
-</ul>
-<p><strong>乖離が蓄積する構造と定期運用</strong>:</p>
-<p>SSOTの記述（自動化.md/MCPガイド/repo-index.yaml等）は、実態（Cron実体・MCP構成・リポ数・プロジェクト追加）の変更に追従しきれず、徐々に乖離が蓄積する。これは例外ではなく構造的な性質（記述は手動・実態は自動/頻繁更新）。主な乖離パターン:</p>
-<ul>
-<li>設計変更後の記述未更新（例: MCP のプロファイル分離で帰属だけが古いまま）</li>
-<li>リポジトリ/プロジェクト追加時の index 未追記</li>
-<li>Cron 実体の増減と記述のズレ（ゴーストCron: 記載のみで実体なし、等）</li>
-</ul>
-<p>→ 月金の <code>ssot-sync auto</code>（高重要度のみ自動修正）+ 対話モードでの深掘り検証（sentaku L2 で実測ベースの淘汰）が乖離回収の主回路。深掘り検証では「表層の数だけでなく実態を計測する」（例: バックログ退避対象0件の実測がゴーストCronの実体化を退ける）。</p>
-<h3>スキル追加時のルール</h3>
-<p>新しいスキルを ~/.claude/skills/ に作成した時は:</p>
+<h3>判定基準</h3>
+<p><strong>保管場所の決定基準</strong>:</p>
 <ol>
-<li><strong>01_DECISIONS/claude-code/_INDEX.md</strong> に記録</li>
-<li><strong>ssot-guide</strong> のこのセクションに追記</li>
-<li>自動化関連なら <strong>00_SYSTEM/自動化.md</strong> も更新</li>
+<li><strong>機密レベル</strong>: 外部公開可否</li>
+<li><strong>想定寿命</strong>: 将来の参照頻度</li>
+<li><strong>削除可能性</strong>: 定期的な整理が必要か</li>
+<li><strong>検索優先度</strong>: よく検索する内容か</li>
 </ol>
-<h3>ssot-record と ssot-sync の使い分け</h3>
-<div class="table-wrapper"><table>
-<thead>
-<tr>
-<th>状況</th>
-<th>スキル</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>作業内容を記録したい</td>
-<td><code>ssot-record</code>（「記録して」）</td>
-</tr>
-<tr>
-<td>SSOTの情報が古いか確認したい</td>
-<td><code>ssot-sync</code>（「SSOT整理して」）</td>
-</tr>
-<tr>
-<td>SSOTから情報を探したい</td>
-<td><code>ssot-search</code>（「SSOTから探して」）</td>
-</tr>
-</tbody>
-</table></div>
+<p><strong>用途に応じた振り分け</strong>:</p>
+<ul>
+<li>「なぜそう決めたか」 → <code>01_DECISIONS/</code></li>
+<li>「今日何をしたか」 → <code>10_DAILY/</code></li>
+<li>「全体像」 → <code>00_SYSTEM/</code></li>
+<li>「調査内容」 → <code>30_RESEARCH/</code></li>
+<li>「やるべきこと」 → <code>バックログ.md</code></li>
+<li>「外部公開」 → <code>20_PUBLISHING/</code></li>
+</ul>
+<p>詳細は <code>00_SYSTEM/特性カタログ/01_保管場所.md</code> を参照。</p>
 
         </article>
 
@@ -468,7 +370,7 @@ SessionStart Hook
          · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
          · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
          · <a href="https://fukukei23.github.io/">fukukei23</a></p>
-        <p class="site-version">v1.2229 · 2026.07.12</p>
+        <p class="site-version">v1.2230 · 2026.07.12</p>
     </footer>
 
     <script src="../assets/script.js"></script>
