@@ -106,6 +106,14 @@
 
         <article class="chapter-body">
             <h1>02 LLMルーティング — 複数LLMの使い分け設計</h1>
+<aside class="tldr">
+<p><strong>3行で分かる</strong></p>
+<ol>
+<li>複数LLMを「コスト」と「品質」で使い分けるルーティング設計パターン</li>
+<li>デフォルト（安価）→ フォールバック（堅牢）→ 最終（高性能）の3層構造</li>
+<li>タスクの性質に応じて最適なモデルへ自動/手動で振り分け、費用対効果を最大化</li>
+</ol>
+</aside>
 <div class="callout callout-info"><p>コストと品質を最適化するためのモデルルーティング設計パターン</p></div>
 <hr />
 <h2>なぜルーティングが必要か</h2>
@@ -288,7 +296,7 @@ async def route_message(request):
          · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
          · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
          · <a href="https://fukukei23.github.io/">fukukei23</a></p>
-        <p class="site-version">v1.2299 · 2026.07.17</p>
+        <p class="site-version">v1.2300 · 2026.07.17</p>
     </footer>
 
     <script src="../assets/script.js"></script>
