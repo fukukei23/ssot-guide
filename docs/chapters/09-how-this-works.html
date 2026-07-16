@@ -123,6 +123,63 @@ docs/assets/         ← style.css / script.js
 </code></pre>
 <p><code>convert.py</code> 1ファイルがビルド全体を担当する。外部CMSやSSGに依存せず、Pythonの標準的なライブラリのみで動作する。</p>
 <hr />
+<h2>TLDR枠（3行で分かる）の実装</h2>
+<p>各章のH1直後に「⚡ 3行で分かる」枠を表示し、スマホの隙間時間でも各章の要点を3行で把握できる仕組み。</p>
+<h3>使い方（source MD側）</h3>
+<p>各章MDの <strong>H1直後</strong> に blockquote で3行サマリーを書く:</p>
+<pre><code># 章タイトル
+
+&gt; **3行で分かる**
+&gt; 1. 要点1
+&gt; 2. 要点2
+&gt; 3. 要点3
+</code></pre>
+<h3>変換（convert.py）</h3>
+<p><code>convert_tldr(html)</code> が <strong>H1直後の最初のblockquote</strong> を <code>&lt;aside class=&quot;tldr&quot;&gt;</code> に変換。<code>'3行で分かる'</code> を含まなければ変換しない（後方互換）。CSS（<code>.tldr</code>）が ⚡アイコン付きの枠を表示し、1行目の「3行で分かる」見出しは <code>::before</code> で代替表示して非表示化。</p>
+<h3>⚠️ 呼出順序の注意（重要）</h3>
+<p><code>convert_tldr</code> は <code>enhance_html</code> の <strong>前</strong>に呼ぶこと。後呼びだと <code>enhance_html</code> の callout 変換（<code>&lt;blockquote&gt;&lt;p&gt;…&lt;/p&gt;&lt;/blockquote&gt;</code>）にTLDRが食われ、aside化されない。</p>
+<pre><code class="language-python"># OK（前呼び）
+html_body = convert_tldr(html_body)   # 先にTLDRをaside化
+html_body = enhance_html(html_body)   # 残りのblockquoteをcallout化
+
+# NG（後呼び・TLDRがcalloutに食われる）
+html_body = enhance_html(html_body)
+html_body = convert_tldr(html_body)
+</code></pre>
+<div class="callout callout-info"><p>本家 claude-code-guide は後呼びで動いているが、callout変換を持つガイドでは前呼びが正しい（2026-07-17 横展開時に発見）。</p></div>
+<h3>横展開状況（2026-07-17）</h3>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>リポジトリ</th>
+<th>方式</th>
+<th>ページ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>claude-code-guide</td>
+<td>convert.py（後呼び・本家）</td>
+<td>全章</td>
+</tr>
+<tr>
+<td>ssot-guide / dev-textbook / ssh-guide</td>
+<td>convert.py（前呼び）</td>
+<td>各全章</td>
+</tr>
+<tr>
+<td>loop-engineering-guide</td>
+<td>HTML直接記述（aside直埋め）</td>
+<td>4章</td>
+</tr>
+<tr>
+<td>python-reading-guide</td>
+<td>未対応（Jupyter Book風・別構造）</td>
+<td>48章（別タスク）</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
 <h2>convert.py の主要関数</h2>
 <div class="table-wrapper"><table>
 <thead>
@@ -388,7 +445,7 @@ def _build(self):
          · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
          · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
          · <a href="https://fukukei23.github.io/">fukukei23</a></p>
-        <p class="site-version">v1.2300 · 2026.07.17</p>
+        <p class="site-version">v1.2301 · 2026.07.17</p>
     </footer>
 
     <script src="../assets/script.js"></script>
