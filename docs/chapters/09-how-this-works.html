@@ -174,11 +174,12 @@ html_body = convert_tldr(html_body)
 </tr>
 <tr>
 <td>python-reading-guide</td>
-<td>未対応（Jupyter Book風・別構造）</td>
-<td>48章（別タスク）</td>
+<td>既存cheat-section強化（学習型・配置変更）</td>
+<td>30章（interactive HTML）</td>
 </tr>
 </tbody>
 </table></div>
+<div class="callout callout-info"><p><strong>学習型教科書では配置を変える（2026-07-17 python-reading-guide で発見）</strong>: 上記はすべて<strong>リファレンス型</strong>（調べる目的）を前提に「冒頭 H1 直下の結論ファースト TLDR」を置く。しかし<strong>学習型教科書</strong>（段階的に学ぶ目的・python-reading-guide 等）では冒頭に結論を出すと学習体験を逆転させ、既存の concept-card（冒頭1行概念）とも重複する。学習型では <strong>既存のまとめセクション（末尾の cheat-section 等）を強化する位置</strong>に「3行で分かる」を置くのが正しい。ガイド平易化の前には必ず<strong>既存のまとめ要素の有無</strong>を確認し、既存があれば新規 aside ではなく強化で重複を避けること。</p></div>
 <hr />
 <h2>convert.py の主要関数</h2>
 <div class="table-wrapper"><table>
@@ -445,7 +446,7 @@ def _build(self):
          · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
          · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
          · <a href="https://fukukei23.github.io/">fukukei23</a></p>
-        <p class="site-version">v1.2304 · 2026.07.17</p>
+        <p class="site-version">v1.2305 · 2026.07.17</p>
     </footer>
 
     <script src="../assets/script.js"></script>
