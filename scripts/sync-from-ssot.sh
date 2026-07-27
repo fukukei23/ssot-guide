@@ -46,12 +46,12 @@ text = repo_index.read_text(encoding='utf-8')
 
 repos = []
 for line in text.split('\n'):
-    if '| 公開 |' in line and line.strip().startswith('|'):
+    if '🌐 public' in line and line.strip().startswith('|'):
         cells = [c.strip() for c in line.split('|') if c.strip()]
-        if len(cells) >= 5:
-            name = cells[0]
-            status = cells[3] if len(cells) > 3 else ''
-            desc = cells[4] if len(cells) > 4 else ''
+        if len(cells) >= 4:
+            name = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', cells[0])
+            status = cells[2] if len(cells) > 2 else ''
+            desc = cells[3] if len(cells) > 3 else ''
             desc = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', desc)[:60]
             if name and status in ('active', 'development', 'maintenance'):
                 repos.append((name, status, desc))
