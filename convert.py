@@ -19,9 +19,12 @@ VERSION_FILE = Path(__file__).parent / "VERSION"
 # --- バージョン管理 ---
 
 def _read_version() -> str:
-    """VERSIONファイルを読み込む。なければ '1.0' を返す。"""
+    """VERSIONファイルを読み込む。なければ/破損時は '1.0' を返す（並行ビルドでの食い違い対策）。"""
     if VERSION_FILE.exists():
-        return VERSION_FILE.read_text(encoding="utf-8").strip()
+        raw = VERSION_FILE.read_text(encoding="utf-8").strip()
+        # 'major.minor' 形式のみ受理（並行実行で壊れた '1\n420' 等は無視）
+        if re.fullmatch(r"\d+(\.\d+)?", raw):
+            return raw
     return "1.0"
 
 
