@@ -13,6 +13,12 @@
 #   M-1: skip/実行/中断をJSON Linesログに記録（cron死活監視・REPO_TABLE成否観測=V-1）
 #   M-2: dry-run/実行時に前回同期以降のobsidian-ssot commit一覧を表示（stale検知・取りこぼし可視化）
 #   M-3: rev-parse HEAD 失敗時に unknown で「常時変更あり」誤判定させず中断
+# 2026-08-28 追加（バックログL40・P1）:
+#   F-1: flock排他 — durable cron は並行セッションが同一時刻に独立発火する
+#        （08-22 3回・08-23 done×2・08-27 4回の実測）。両者が同時にhash判定を
+#        通過すると同一内容のcommitが2本立つ（08-23実績）。先着1実行のみ継続し、
+#        他は即skip（lockはプロセス終了で自動解除・ファイル残置は無害）。
+#        LOCK_FILE/LOG_FILE は SYNC_LOCK_FILE/SYNC_LOG_FILE で上書き可能（テスト用）。
 
 set -euo pipefail
 
@@ -20,7 +26,8 @@ SSOT_DIR="$HOME/projects/obsidian-ssot"
 GUIDE_DIR="$HOME/projects/ssot-guide"
 DRY_RUN=false
 MARKER="公開リポジトリ一覧（自動更新）"
-LOG_FILE="$HOME/.claude/state/ssot-guide-sync.jsonl"
+LOG_FILE="${SYNC_LOG_FILE:-$HOME/.claude/state/ssot-guide-sync.jsonl}"
+LOCK_FILE="${SYNC_LOCK_FILE:-$HOME/.claude/state/ssot-guide-sync.lock}"
 SOURCE_08_REL="source/08_プロジェクト紹介.md"
 
 for arg in "$@"; do
@@ -47,6 +54,15 @@ PYEOF
 
 echo "🔄 SSOT → ssot-guide 同期開始 $(date '+%Y-%m-%d %H:%M:%S')"
 [[ "$DRY_RUN" == "true" ]] && echo "   モード: DRY-RUN（ファイル書き込みなし）"
+
+# --- F-1: flock排他（多重発火対策・先着1実行のみ継続） ---
+mkdir -p "$(dirname "$LOCK_FILE")"
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+    echo "⏭️  他のsync-from-ssot実行中（flock排他）— スキップ"
+    log_json "mode=$MODE" "action=skip" "reason=flock_busy"
+    exit 0
+fi
 
 # --- 差分チェック（M-3: 取得失敗は中断・誤動作させない） ---
 if ! SSOT_HASH=$(git -C "$SSOT_DIR" rev-parse HEAD 2>/dev/null); then
