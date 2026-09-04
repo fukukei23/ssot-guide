@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知識の保存先の使い分け（SSOT層） — SSOT Guide</title>
+    <meta name="description" content="Claude Code CLI 知識の保存先の使い分け（SSOT層）の解説 — AIコーディングアシスタント完全ガイド">
+    <meta property="og:title" content="知識の保存先の使い分け（SSOT層） — SSOT Guide">
+    <meta property="og:description" content="Claude Code CLI 知識の保存先の使い分け（SSOT層）の解説">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://fukukei23.github.io/ssot-guide/chapters/10-ssot.html">
+    <meta property="og:image" content="https://fukukei23.github.io/ssot-guide/assets/ogp.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+    <header class="site-header">
+        <button class="menu-toggle" aria-label="メニュー" id="menuToggle">
+            <span></span><span></span><span></span>
+        </button>
+        <a href="../index.html" class="site-title">🏛️ SSOT Guide</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="テーマ切替">
+            <span class="icon-light">☀️</span>
+            <span class="icon-dark">🌙</span>
+        </button>
+    </header>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="../index.html">🏠 ホーム</a>
+        </div>
+        
+        <a href="00-overview.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🏛️</span>
+            概要
+        </a>
+        
+        <a href="01-structure.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">📁</span>
+            ディレクトリ設計
+        </a>
+        
+        <a href="02-llm-routing.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">⚡</span>
+            LLMルーティング
+        </a>
+        
+        <a href="03-claude-code.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🤖</span>
+            Claude Code統合
+        </a>
+        
+        <a href="04-autonomous.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🔄</span>
+            自律開発ループ
+        </a>
+        
+        <a href="05-recording.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">📝</span>
+            記録・ドキュメント
+        </a>
+        
+        <a href="06-methods.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🗂️</span>
+            開発手法カタログ
+        </a>
+        
+        <a href="07-career.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">💼</span>
+            キャリア戦略
+        </a>
+        
+        <a href="08-projects.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🚀</span>
+            プロジェクト紹介
+        </a>
+        
+        <a href="09-how-this-works.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🔧</span>
+            ガイドサイト構築
+        </a>
+        
+        <a href="10-ssot.html"
+           class="sidebar-link active">
+            <span class="sidebar-icon">📄</span>
+            知識の保存先の使い分け（SSOT層）
+        </a>
+        
+    </nav>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <main class="content">
+        <div class="chapter-nav-top">
+            
+            <a href="09-how-this-works.html" class="nav-prev">← ガイドサイト構築</a>
+            
+            
+        </div>
+
+        <article class="chapter-body">
+            <h1>10 知識の保存先の使い分け（SSOT層） — 判断の経緯と生きタスクの置き場所</h1>
+<p>SSOT運用で「この知識、どこに保存すればいいのか？」問題が起きるのは、Claude Code環境だけではない。Vault内部にも複数の保存先があり、使い分けを誤ると<strong>知識が埋もれる</strong>か、<strong>真実のソースが増殖する</strong>。本章ではVault内部の代表的な2層と、Claude Code機能側との境界を整理する。</p>
+<div class="callout callout-info"><p>memory・rules・hooks（Claude Code機能ベースの3層）の使い分けは <a href="https://fukukei23.github.io/claude-code-guide/">claude-code-guide「知識の保存先の使い分け」</a> を参照。</p></div>
+<hr />
+<h2>Vault内部の2層</h2>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>層</th>
+<th>役割</th>
+<th>向いているもの</th>
+<th>鉄則</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>01_DECISIONS</strong></td>
+<td>技術的決定の<strong>経緯</strong>（なぜそうしたか・複数案比較・根本原因）</td>
+<td>設計判断・事故分析・再検討条件</td>
+<td>「経緯」のみ。成果物の正典は別場所へ</td>
+</tr>
+<tr>
+<td><strong>バックログ</strong></td>
+<td>生きタスクの<strong>唯一の正典</strong></td>
+<td>未完了タスク（<code>[ ]</code>）・完了履歴（<code>[x]</code>）</td>
+<td>handoff等へ「次のタスク」を転記しない（完了済みが残り続ける事故防止）</td>
+</tr>
+</tbody>
+</table></div>
+<h3>01_DECISIONS — 「なぜそう決めたか」の正典</h3>
+<ul>
+<li>1トピック=1ファイル・frontmatterに根本原因（root_cause）と反証条件（falsification）を書く</li>
+<li>反証条件は「この判断が誤りだと分かる観測事実」を具体的に（「テストが再び赤くなった時」等・抽象語禁止）</li>
+<li>判断が覆ったら<code>outcome</code>を更新する（記録は死なせない）</li>
+</ul>
+<h3>バックログ — タスクはここだけを見る</h3>
+<ul>
+<li>セッション引き継ぎ（handoff）に「次のタスク」を書かない。正典が2つになると、完了済みタスクが転記コピペで永遠に残る</li>
+<li>完了したら<code>[x]</code>化。放置された<code>[ ]</code>は定期的に棚卸しする</li>
+</ul>
+<hr />
+<h2>判断ゲート照合表（どこに何を書くか）</h2>
+<p>記録する前に自問する順番:</p>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>自問</th>
+<th>はいの行き先</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>能力・方針・構造の話か？</td>
+<td><code>00_SYSTEM</code>（システム正典）</td>
+</tr>
+<tr>
+<td>なぜそう決めたか、理由の経緯があるか？</td>
+<td><code>01_DECISIONS</code></td>
+</tr>
+<tr>
+<td>個人の失敗の直し方か？</td>
+<td>memory（Claude Code側）</td>
+</tr>
+<tr>
+<td>生きているタスクか？</td>
+<td>バックログ</td>
+</tr>
+<tr>
+<td>外部サービスの調査で時系列で陳腐化するか？</td>
+<td><code>30_RESEARCH</code>（スナップショット扱い）</td>
+</tr>
+</tbody>
+</table></div>
+<div class="callout callout-info"><p>判断ゲートの<strong>正典は層1ルール</strong>（毎セッション読込の共有ルール）。本章は照合表であり、ここが正典ではない。</p></div>
+<hr />
+<h2>ありがちな失敗</h2>
+<ul>
+<li><strong>02正典化</strong>: 同じ知識をガイドとSSOTの両方に全文書く → 片方だけ更新されて乖離。ガイドは照合表+リンクに留め、全文は正典に置く</li>
+<li><strong>memory万能化</strong>: 恒久的な方針をmemoryに逃す → memoryは毎回読まれるが、正典性が弱い。方針はrules/00_SYSTEMへ</li>
+<li><strong>経緯を成果物に混ぜる</strong>: 設計の理由をREADME等の成果物に書く → 成果物が肥大化する。経緯は01_DECISIONSへ分離</li>
+</ul>
+<p>💡 <strong>一言でいうと</strong>: 「なぜ」は01_DECISIONS、「今やること」はバックログ。そして「ガイドは正典の写しを作らない」——リンクで繋ぐだけにするのが、更新漏れを防ぐ一番の防御。</p>
+
+        </article>
+
+        <nav class="chapter-nav-bottom">
+            
+            <a href="09-how-this-works.html" class="nav-card prev">
+                <span class="nav-label">← 前の章</span>
+                <span class="nav-title">🔧 ガイドサイト構築</span>
+            </a>
+            
+            
+        </nav>
+    </main>
+
+    <footer class="site-footer">
+        <p>SSOT Guide — <a href="https://github.com/fukukei23/ssot-guide">GitHub</a>
+         · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
+         · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
+         · <a href="https://fukukei23.github.io/">fukukei23</a></p>
+        <p class="site-version">v421.27 · 2026.09.05</p>
+    </footer>
+
+    <script src="../assets/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default',
+            themeVariables: { fontSize: '14px' }
+        });
+    </script>
+</body>
+</html>
