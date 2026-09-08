@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ssot-search v2（RAG検索） — SSOT Guide</title>
+    <meta name="description" content="Claude Code CLI ssot-search v2（RAG検索）の解説 — AIコーディングアシスタント完全ガイド">
+    <meta property="og:title" content="ssot-search v2（RAG検索） — SSOT Guide">
+    <meta property="og:description" content="Claude Code CLI ssot-search v2（RAG検索）の解説">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://fukukei23.github.io/ssot-guide/chapters/11-ssot-search-v2.html">
+    <meta property="og:image" content="https://fukukei23.github.io/ssot-guide/assets/ogp.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+    <header class="site-header">
+        <button class="menu-toggle" aria-label="メニュー" id="menuToggle">
+            <span></span><span></span><span></span>
+        </button>
+        <a href="../index.html" class="site-title">🏛️ SSOT Guide</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="テーマ切替">
+            <span class="icon-light">☀️</span>
+            <span class="icon-dark">🌙</span>
+        </button>
+    </header>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="../index.html">🏠 ホーム</a>
+        </div>
+        
+        <a href="00-overview.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🏛️</span>
+            概要
+        </a>
+        
+        <a href="01-structure.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">📁</span>
+            ディレクトリ設計
+        </a>
+        
+        <a href="02-llm-routing.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">⚡</span>
+            LLMルーティング
+        </a>
+        
+        <a href="03-claude-code.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🤖</span>
+            Claude Code統合
+        </a>
+        
+        <a href="04-autonomous.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🔄</span>
+            自律開発ループ
+        </a>
+        
+        <a href="05-recording.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">📝</span>
+            記録・ドキュメント
+        </a>
+        
+        <a href="06-methods.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🗂️</span>
+            開発手法カタログ
+        </a>
+        
+        <a href="07-career.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">💼</span>
+            キャリア戦略
+        </a>
+        
+        <a href="08-projects.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🚀</span>
+            プロジェクト紹介
+        </a>
+        
+        <a href="09-how-this-works.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">🔧</span>
+            ガイドサイト構築
+        </a>
+        
+        <a href="10-ssot.html"
+           class="sidebar-link">
+            <span class="sidebar-icon">📄</span>
+            知識の保存先の使い分け（SSOT層）
+        </a>
+        
+        <a href="11-ssot-search-v2.html"
+           class="sidebar-link active">
+            <span class="sidebar-icon">🔍</span>
+            ssot-search v2（RAG検索）
+        </a>
+        
+    </nav>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <main class="content">
+        <div class="chapter-nav-top">
+            
+            <a href="10-ssot.html" class="nav-prev">← 知識の保存先の使い分け（SSOT層）</a>
+            
+            
+        </div>
+
+        <article class="chapter-body">
+            <h1>11 ssot-search v2 — RAG検索の仕組みと精度改善</h1>
+<aside class="tldr">
+<p><strong>3行で分かる</strong></p>
+<ol>
+<li>SSOT（約4,000文書・24,000断片）を「意味」で検索できるRAG検索エンジンを構築した</li>
+<li>検索は「チャンキング → 埋め込み → ベクトルDB → 30分差分更新」の4工程で自動運用</li>
+<li>精度は39問のテストで測定：正解が上位5件に入る割合（Recall@5（リコール・アット・ファイブ））を 0.026 → 0.744 に改善</li>
+</ol>
+</aside>
+<div class="callout callout-info"><p>4,000文書の知識ベースから「あの話、どこに書いてたっけ？」を1発で見つける仕組み</p></div>
+<hr />
+<h2>RAGとは — 「覚えている」のではなく「探してくる」</h2>
+<p>RAG（ラグ・Retrieval-Augmented Generation）は、LLMに質問する前に「関連する資料を検索して文脈として渡す」構成の総称です。</p>
+<p>本プロジェクト（ssot-search v2）では答えの「生成」は行わず、<strong>検索に特化</strong>しています。つまり SSOT 全体から「目的の知識が書かれた断片」を1発で見つけ出す検索エンジンです。LLMの記憶に頼らず、自分の記録から根拠を引いてくるのが目的です。</p>
+<div class="callout callout-tip"><p>💡 一言でいうと: 4,000冊のノートの中から「あの話、どのページ？」と聞くと、10回中7〜8回は関連ページ5枚以内で見つけてくれる助手、です。</p></div>
+<hr />
+<h2>検索パイプラインの4工程</h2>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>工程</th>
+<th>やったこと</th>
+<th>例え</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>① チャンキング</strong></td>
+<td>4,021個のMarkdown文書を、意味のまとまりごとに24,010断片へ分割</td>
+<td>厚い辞書を見出しのカード1枚ずつに切り分ける</td>
+</tr>
+<tr>
+<td><strong>② 埋め込みモデル選定</strong></td>
+<td>日本語特化の ruri-v3-130m を公開ベンチマーク（JMTEB）比較のうえ選定</td>
+<td>翻訳者を雇うとき「日本語が得意な人」を試験成績で選ぶ</td>
+</tr>
+<tr>
+<td><strong>③ ベクトルDB構築</strong></td>
+<td>各断片を「意味の座標（ベクトル）」に変換し ChromaDB に格納。意味が近い文ほど近い座標になる</td>
+<td>図書館の本を「内容が似ている順に棚に並べ直す」</td>
+</tr>
+<tr>
+<td><strong>④ 差分更新（30分毎）</strong></td>
+<td>auto-sync（30分毎の自動バックアップ）と連動し、<strong>変更のあった断片だけ</strong>を再索引。全量再構築は不要</td>
+<td>辞書を作り直さず、改訂ページだけ差し替える</td>
+</tr>
+</tbody>
+</table></div>
+<p>「検索したい文」も同じ座標系に変換して、<strong>近い座標の断片</strong>を取り出すのが意味検索です。「ファイル名やキーワードが一致」しなくても、書いている内容が近ければ見つかります。</p>
+<hr />
+<h2>精度を測る — 39問のテストセット</h2>
+<p>「検索が賢くなった気がする」で終わらせず、<strong>試験を先に用意して数字で測定</strong>しました。</p>
+<ul>
+<li><strong>採点基準の事前固定</strong>: 測定指標（Recall@5 / Recall@10 / MRR@10 / 根拠文表示率@5）を、評価実行の<strong>前に</strong>ファイルとして確定（commit）。結果を見てから基準を変える余地を構造的に排除</li>
+<li><strong>合成Q&amp;A 26問</strong>: 記録から抽出した文書をもとに、別のLLM（MiniMax M3）に質問文を生成させた（問題を作った本人が解く自己バイアスの回避）</li>
+<li><strong>「答えを知らない問い」13問</strong>: 細部事実（日付・件数・設定値）を問う問題。正解（番号と文書の対応）はスクリプト内部に閉じ、測定する側は実行まで正解一覧を見ない（ブラインド担保）</li>
+<li><strong>ハルシネーション検査</strong>: 生成された回答キーワードが、出題元の文書本文に実在するかを機械検証（棄却0件）</li>
+</ul>
+<hr />
+<h2>結果 — Recall@5 0.026 → 0.744</h2>
+<div class="table-wrapper"><table>
+<thead>
+<tr>
+<th>検索方式</th>
+<th>Recall@5</th>
+<th>Recall@10</th>
+<th>MRR@10</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1（キーワード一致）</td>
+<td>0.026</td>
+<td>0.077</td>
+<td>0.014</td>
+</tr>
+<tr>
+<td><strong>v2（意味検索）</strong></td>
+<td><strong>0.744</strong></td>
+<td><strong>0.744</strong></td>
+<td><strong>0.547</strong></td>
+</tr>
+<tr>
+<td>RRF統合（v1+v2の併合）</td>
+<td>0.718</td>
+<td>0.744</td>
+<td>0.391</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Recall@5</strong> は「正しい答えが書かれた断片が、検索上位5件に入る割合」です。旧検索（キーワード一致）は **2.6%**＝100問中2〜3問しか当たらない状態で、v2（意味検索）で **74.4%**＝10問中7〜8問で上位5件に正解が来るまで改善しました。</p>
+<p><strong>正直な負けも記録</strong>しています。v1とv2を併合するRRF統合は、Recall@10ではv2と同率（上位10件に入る正解を1つも落とさない）だった一方、<strong>順位精度（MRR@10）は0.391に低下</strong>。レビューで期待された「統合が両者を超える」は未達です。評価後のパラメータ調整は**ベンチ過学習（テストにだけ強くなること）**を招くため実施せず、未達のまま記録に残しています。改善は採点基準を変えずに次回再測定で行います。</p>
+<div class="callout callout-warn"><p>⚠ 評価の誠実性の話です。数字を良く見せるためにテストを削ったり基準を変えたりすると、測定の意味がなくなります。「未達」という結果をそのまま残すこと自体が、この評価の信頼性の証明です。</p></div>
+<hr />
+<h2>どう使うか</h2>
+<p>Claude Code セッション内で <code>/ssot-search</code> スキルを呼ぶと、SSOT 全文書を意味検索できます。日常の「過去の決定を探す」「あの設定どこだっけ」が、ファイル名を思い出さずに引けます。</p>
+<ul>
+<li>検索コマンドの使い方・スキル連携: <a href="03-claude-code.html">03 Claude Code統合</a></li>
+<li>全体マップ（mindmap）: <a href="#">トップ</a></li>
+</ul>
+<hr />
+<h2>設計の教訓</h2>
+<ol>
+<li><strong>測る前に試験を固定する</strong> — 結果を見てからの基準変更は、測定ではなく作文になる</li>
+<li><strong>問題を作った本人に解かせない</strong> — 問題生成と評価対象を別系統（別LLM・ブラインド）に分ける</li>
+<li><strong>負けも記録する</strong> — 「統合すれば良くなるはず」が外れた事実は、次の改善の最も確実な手がかりになる</li>
+</ol>
+
+        </article>
+
+        <nav class="chapter-nav-bottom">
+            
+            <a href="10-ssot.html" class="nav-card prev">
+                <span class="nav-label">← 前の章</span>
+                <span class="nav-title">📄 知識の保存先の使い分け（SSOT層）</span>
+            </a>
+            
+            
+        </nav>
+    </main>
+
+    <footer class="site-footer">
+        <p>SSOT Guide — <a href="https://github.com/fukukei23/ssot-guide">GitHub</a>
+         · <a href="https://fukukei23.github.io/claude-code-guide/">Claude Code Guide</a>
+         · <a href="https://fukukei23.github.io/guides/">技術ガイド集</a>
+         · <a href="https://fukukei23.github.io/">fukukei23</a></p>
+        <p class="site-version">v421.33 · 2026.09.09</p>
+    </footer>
+
+    <script src="../assets/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default',
+            themeVariables: { fontSize: '14px' }
+        });
+    </script>
+</body>
+</html>

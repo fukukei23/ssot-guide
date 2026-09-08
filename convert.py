@@ -2,7 +2,6 @@
 """SSOT Guide: Markdown → モバイル最適化HTML変換スクリプト."""
 
 import re
-import unicodedata
 from datetime import date
 from pathlib import Path
 
@@ -56,6 +55,7 @@ CHAPTER_MAP = {
     "07_キャリア戦略.md": {"slug": "07-career", "title": "キャリア戦略", "icon": "💼", "desc": "AIネイティブ開発者としての戦略・ポートフォリオ設計"},
     "08_プロジェクト紹介.md": {"slug": "08-projects", "title": "プロジェクト紹介", "icon": "🚀", "desc": "公開リポジトリ一覧・自律開発の実践"},
     "09_ガイドサイト構築.md": {"slug": "09-how-this-works", "title": "ガイドサイト構築", "icon": "🔧", "desc": "convert.py・テストスイート・GitHub Pages・CSS変数"},
+    "11_ssot-search-v2-RAG検索.md": {"slug": "11-ssot-search-v2", "title": "ssot-search v2（RAG検索）", "icon": "🔍", "desc": "4,000文書を意味で引く検索エンジン・チャンキングから精度評価まで"},
 }
 
 
@@ -453,7 +453,7 @@ def rewrite_links(html: str, chapter_map: dict | None = None) -> str:
                 elif "#" in decoded:
                     anchor = "#" + decoded.split("#", 1)[1]
                 return f'href="{info["slug"]}.html{anchor}"'
-        return f'href="#"'
+        return 'href="#"'
 
     html = re.sub(r'href="([^"]*\.md[^"]*)"', replace_md_link, html)
 
